@@ -54,7 +54,7 @@ To create a new custom domain, you must supply the `origin_domain_name` as an at
 curl -X "POST" "https://xxxx.execute-api.us-east-1.amazonaws.com/v1/custom_domains/my.customdomain.com" \
      -H 'Content-Type: application/json; charset=utf-8' \
      -d $'{
-  "origin_domain_name": "usersubdomain.myapp.com"
+  "origin_domain_name": "user.mycoolapp.com"
 }'
 ```
 
@@ -65,6 +65,5 @@ HTTP/1.1 201 Created
 Content-Type: application/json
 ...
 
-{"domain_name":"my.customdomain.com","setup_started_at":1513273146072}
+{"domain_name":"my.customdomain.com","origin_domain_name":"usersubdomain.myapp.com","setup_started_at":1513277524474,"setup_verified_at":null,"setup_verification_failed_at":null,"delete_started_at":null,"nameservers":null,"route53_hosted_zone_created_at":null,"route53_hosted_zone_id":null,"nameserver_delegation_verified_at":null,"ses_domain_identity_created_at":null,"ses_domain_identity_verified_at":null,"ses_domain_dkim_verified_at":null,"acm_certificate_arn":null,"acm_certificate_verified_at":null,"cloudfront_distribution_id":null,"cloudfront_distribution_domain_name":null,"cloudfront_distribution_verified_at":null}
 ```
-
