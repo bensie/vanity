@@ -340,3 +340,10 @@ Resources:
                 Resource: !Sub
                   - "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Table}"
                   - { Table: !Ref CustomDomainsTable }
+
+Outputs:
+  CustomDomainsAPIURL:
+    Description: Custom domains API URL
+    Value: !Sub
+      - "https://${ApiID}.execute-api.${AWS::Region}.amazonaws.com/v1/custom_domains"
+      - ApiID: !Ref ApiGateway
