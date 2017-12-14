@@ -1,0 +1,342 @@
+Parameters: {}
+Resources:
+
+  ##
+  ## S3
+  ##
+  CustomDomainsS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join
+        - '-'
+        - - custom-domains
+          - !Select
+            - 0
+            - !Split
+              - '-'
+              - !Select
+                - 2
+                - !Split
+                  - /
+                  - !Ref AWS::StackId
+
+  ##
+  ## DynamoDB
+  ##
+  CustomDomainsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Join
+        - '-'
+        - - custom-domains
+          - !Select
+            - 0
+            - !Split
+              - '-'
+              - !Select
+                - 2
+                - !Split
+                  - /
+                  - !Ref AWS::StackId
+      KeySchema:
+        - AttributeName: DomainName
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: DomainName
+          AttributeType: S
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+
+  ##
+  ## Lambda
+  ##
+  HandleCustomDomainsCreateFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Handle custom domain creation from API Gateway
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Timeout: 5
+      MemorySize: 512
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            var response = {
+              statusCode: 200,
+              body: JSON.stringify({ custom_domains_create: true })
+            }
+            callback(null, response)
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+  HandleCustomDomainsShowFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Handle custom domain show from API Gateway
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Timeout: 5
+      MemorySize: 512
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            var response = {
+              statusCode: 200,
+              body: JSON.stringify({ custom_domains_show: true })
+            }
+            callback(null, response)
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+  HandleCustomDomainsDestroyFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Handle custom domain deletion from API Gateway
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Timeout: 5
+      MemorySize: 512
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            var response = {
+              statusCode: 200,
+              body: JSON.stringify({ custom_domains_destroy: true })
+            }
+            callback(null, response)
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+  DNSZoneCreatorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains hosted zone creator
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            var response = {
+              statusCode: 200,
+              body: JSON.stringify({ custom_domains_destroy: true })
+            }
+            callback(null, response)
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+
+  ##
+  ## API Gateway
+  ##
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Join
+        - '-'
+        - - custom-domains
+          - !Select
+            - 0
+            - !Split
+              - '-'
+              - !Select
+                - 2
+                - !Split
+                  - /
+                  - !Ref AWS::StackId
+  CustomDomainsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: custom_domains
+  CustomDomainsDomainNameResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !Ref CustomDomainsResource
+      PathPart: "{domain_name}"
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: CustomDomainCreateMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: v1
+
+  ##
+  ## API Gateway Methods
+  ##
+  CustomDomainCreateMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn: HandleCustomDomainsCreateFunction
+    Properties:
+      ResourceId: !Ref CustomDomainsDomainNameResource
+      RestApiId: !Ref ApiGateway
+      HttpMethod: POST
+      AuthorizationType: NONE
+      RequestParameters:
+        method.request.path.domain_name: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub
+          - "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations"
+          - LambdaArn: !GetAtt HandleCustomDomainsCreateFunction.Arn
+  CustomDomainShowMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn: HandleCustomDomainsShowFunction
+    Properties:
+      ResourceId: !Ref CustomDomainsDomainNameResource
+      RestApiId: !Ref ApiGateway
+      HttpMethod: GET
+      AuthorizationType: NONE
+      RequestParameters:
+        method.request.path.domain_name: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub
+          - "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations"
+          - LambdaArn: !GetAtt HandleCustomDomainsShowFunction.Arn
+  CustomDomainDestroyMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn: HandleCustomDomainsDestroyFunction
+    Properties:
+      ResourceId: !Ref CustomDomainsDomainNameResource
+      RestApiId: !Ref ApiGateway
+      HttpMethod: DELETE
+      AuthorizationType: NONE
+      RequestParameters:
+        method.request.path.domain_name: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub
+          - "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations"
+          - LambdaArn: !GetAtt HandleCustomDomainsDestroyFunction.Arn
+  HandleCustomDomainsCreateFunctionExecutionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt HandleCustomDomainsCreateFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub
+        - "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*/*/*"
+        - { Api: !Ref ApiGateway }
+  HandleCustomDomainsShowFunctionExecutionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt HandleCustomDomainsShowFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub
+        - "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*/*/*"
+        - { Api: !Ref ApiGateway }
+  HandleCustomDomainsDestroyFunctionExecutionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt HandleCustomDomainsDestroyFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub
+        - "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*/*/*"
+        - { Api: !Ref ApiGateway }
+  ##
+  ## Permissions
+  ##
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: custom-domains-cloudwatch-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                Resource: "*"
+        - PolicyName: custom-domains-route53-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - route53:CreateHostedZone
+                  - route53:GetHostedZone
+                  - route53:ListHostedZones
+                  - route53:DeleteHostedZone
+                  - route53:ChangeResourceRecordSets
+                  - route53:CreateReusableDelegationSet
+                  - route53:GetReusableDelegationSet
+                  - route53:ListReusableDelegationSets
+                  - route53:DeleteReusableDelegationSet
+                Resource: "*"
+        - PolicyName: custom-domains-cloudfront-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudfront:CreateDistribution
+                  - cloudfront:UpdateDistribution
+                  - cloudfront:DeleteDistribution
+                  - cloudfront:GetDistribution
+                Resource: "*"
+        - PolicyName: custom-domains-certificate-manager-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - acm:DescribeCertificate
+                  - acm:RequestCertificate
+                  - acm:DeleteCertificate
+                  - acm:GetCertificate
+                  - acm:ListCertificates
+                Resource: "*"
+        - PolicyName: custom-domains-dynamodb-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                Resource: !Sub
+                  - "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Table}"
+                  - { Table: !Ref CustomDomainsTable }
