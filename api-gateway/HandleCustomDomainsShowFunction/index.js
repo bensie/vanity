@@ -52,7 +52,7 @@ exports.handler = (event, context, callback) => {
   if (!domainName.match(regex)) {
     const response = {
       statusCode: 400,
-      body: JSON.stringify({ error: 'domain_name is invalid' })
+      body: JSON.stringify({ message: 'domain_name is invalid' })
     }
     callback(null, response)
     return
@@ -72,14 +72,14 @@ exports.handler = (event, context, callback) => {
       console.log(err, err.stack)
       const response = {
         statusCode: 500,
-        body: JSON.stringify({ error: 'there was an error in DynamoDB' })
+        body: JSON.stringify({ message: 'there was an error in DynamoDB' })
       }
       callback(null, response)
     } else {
       if (Object.keys(data).length === 0) {
         const response = {
           statusCode: 404,
-          body: JSON.stringify({ error: 'domain_name not found' })
+          body: JSON.stringify({ message: 'domain_name not found' })
         }
         callback(null, response)
       } else {

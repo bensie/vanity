@@ -56,7 +56,7 @@ exports.handler = (event, context, callback) => {
   if (!domainName.match(regex)) {
     const response = {
       statusCode: 400,
-      body: JSON.stringify({ error: 'domain_name is invalid' })
+      body: JSON.stringify({ message: 'domain_name is invalid' })
     }
     callback(null, response)
     return
@@ -65,7 +65,7 @@ exports.handler = (event, context, callback) => {
   if (!originDomainName.match(regex)) {
     const response = {
       statusCode: 400,
-      body: JSON.stringify({ error: 'origin_domain_name is invalid' })
+      body: JSON.stringify({ message: 'origin_domain_name is invalid' })
     }
     callback(null, response)
     return
@@ -98,7 +98,7 @@ exports.handler = (event, context, callback) => {
       console.log(err, err.stack)
       const response = {
         statusCode: 400,
-        body: JSON.stringify({ error: 'domain_name already exists' })
+        body: JSON.stringify({ message: 'domain_name already exists' })
       }
       callback(null, response)
     } else {

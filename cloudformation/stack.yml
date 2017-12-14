@@ -179,6 +179,25 @@ Resources:
     Properties:
       RestApiId: !Ref ApiGateway
       StageName: v1
+  CustomDomainCreateModel:
+    Type: AWS::ApiGateway::Model
+    Properties:
+      ContentType: application/json
+      RestApiId: !Ref ApiGateway
+      Schema:
+        "$schema": "http://json-schema.org/draft-04/schema#"
+        title: CustomDomainCreate
+        type: object
+        properties:
+          origin_domain_name:
+            type: string
+  CustomDomainCreateRequestValidator:
+    Type: AWS::ApiGateway::RequestValidator
+    Properties:
+      Name: CustomDomainCreateRequestValidator
+      RestApiId: !Ref ApiGateway
+      ValidateRequestBody: true
+      ValidateRequestParameters: true
 
   ##
   ## API Gateway Methods
@@ -191,8 +210,11 @@ Resources:
       RestApiId: !Ref ApiGateway
       HttpMethod: POST
       AuthorizationType: NONE
+      RequestModels:
+        application/json: !Ref CustomDomainCreateModel
       RequestParameters:
         method.request.path.domain_name: true
+      RequestValidatorId: !Ref CustomDomainCreateRequestValidator
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
