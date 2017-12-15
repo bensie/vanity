@@ -182,7 +182,7 @@ Resources:
       Code:
         ZipFile: !Sub |
           exports.handler = (event, context, callback) => {
-            callback(null, "Hello from SES domain creator")
+            callback(null, "Hello from SES domain verifier")
           }
       Environment:
         Variables:
