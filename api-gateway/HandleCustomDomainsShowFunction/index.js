@@ -11,7 +11,7 @@ const payloadObjectWithData = data => ({
     ? data.SetupVerificationFailedAt
     : null,
   delete_started_at: data.DeleteStartedAt ? data.DeleteStartedAt.N : null,
-  nameservers: data.Nameservers ? data.Nameservers.S : null,
+  nameservers: data.Nameservers ? data.Nameservers.SS : null,
   route53_hosted_zone_created_at: data.Route53HostedZoneCreatedAt
     ? data.Route53HostedZoneCreatedAt.N
     : null,

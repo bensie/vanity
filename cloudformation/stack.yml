@@ -131,18 +131,47 @@ Resources:
       Code:
         ZipFile: !Sub |
           exports.handler = (event, context, callback) => {
-            var response = {
-              statusCode: 200,
-              body: JSON.stringify({ custom_domains_destroy: true })
-            }
-            callback(null, response)
+            callback(null, "Hello from DNS Zone Creator")
           }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
-
+  DNSZoneVerifierFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains hosted zone verification
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            callback(null, "Hello from DNS Zone Verification")
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+  CatchAllNonRecoverableFailureFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains catch all non-recoverable failure function
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            callback(null, "Hello from Catch All Non Recoverable Failure")
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
   ##
   ## API Gateway
   ##
@@ -280,6 +309,74 @@ Resources:
       SourceArn: !Sub
         - "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*/*/*"
         - { Api: !Ref ApiGateway }
+
+  ##
+  ## Step Function State Machine
+  ##
+  StateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionString: !Sub |-
+        {
+          "Comment": "Setup a custom domain",
+          "StartAt": "1_DNSZoneCreator",
+          "States": {
+            "1_DNSZoneCreator": {
+              "Type": "Task",
+              "Resource": "${DNSZoneCreatorFunction.Arn}",
+              "Next": "2_DNSZoneVerification",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "CatchAllNonRecoverableFailure"
+                }
+              ]
+            },
+            "2_DNSZoneVerification": {
+              "Type": "Task",
+              "Resource": "${DNSZoneVerifierFunction.Arn}",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 30,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "CatchAllNonRecoverableFailure"
+                }
+              ],
+              "End": true
+            },
+            "CatchAllNonRecoverableFailure": {
+              "Type": "Task",
+              "Resource": "${CatchAllNonRecoverableFailureFunction.Arn}",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+
+      RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/StatesExecutionRole-us-east-1
+
   ##
   ## Permissions
   ##
