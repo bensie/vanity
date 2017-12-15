@@ -69,7 +69,7 @@ exports.handler = (event, context, callback) => {
                   callback(err)
                   return
                 } else {
-                  callback(null, 'Success from Route53HostedZoneCreator')
+                  callback(null, { domainName })
                   return
                 }
               })

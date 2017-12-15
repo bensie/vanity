@@ -131,7 +131,8 @@ Resources:
       Code:
         ZipFile: !Sub |
           exports.handler = (event, context, callback) => {
-            callback(null, "Hello from DNS Zone Creator")
+            const { domainName } = event
+            callback(null, { domainName })
           }
       Environment:
         Variables:
@@ -148,7 +149,8 @@ Resources:
       Code:
         ZipFile: !Sub |
           exports.handler = (event, context, callback) => {
-            callback(null, "Hello from DNS Zone Verification")
+            const { domainName } = event
+            callback(null, { domainName })
           }
       Environment:
         Variables:
@@ -165,7 +167,8 @@ Resources:
       Code:
         ZipFile: !Sub |
           exports.handler = (event, context, callback) => {
-            callback(null, "Hello from SES domain creator")
+            const { domainName } = event
+            callback(null, { domainName })
           }
       Environment:
         Variables:
@@ -182,13 +185,105 @@ Resources:
       Code:
         ZipFile: !Sub |
           exports.handler = (event, context, callback) => {
-            callback(null, "Hello from SES domain verifier")
+            const { domainName } = event
+            callback(null, { domainName })
           }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+  ACMCertificateCreatorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains ACM certificate creator
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            const { domainName } = event
+            callback(null, { domainName })
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+  ACMCertificateVerifierFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains ACM certificate verifier
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            const { domainName } = event
+            callback(null, { domainName })
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+  CloudFrontDistributionCreatorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains CloudFront distribution creator
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            const { domainName } = event
+            callback(null, { domainName })
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+  CloudFrontDistributionDNSRecordCreatorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains CloudFront distribution DNS record creator
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            const { domainName } = event
+            callback(null, { domainName })
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+  CloudFrontDistributionVerifierFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains CloudFront distribution verifier
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            const { domainName } = event
+            callback(null, { domainName })
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+
   CatchAllNonRecoverableFailureFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -199,7 +294,8 @@ Resources:
       Code:
         ZipFile: !Sub |
           exports.handler = (event, context, callback) => {
-            callback(null, "Hello from Catch All Non Recoverable Failure")
+            const { domainName } = event
+            callback(null, { domainName })
           }
       Environment:
         Variables:
@@ -358,7 +454,7 @@ Resources:
             "1_DNSZoneCreator": {
               "Type": "Task",
               "Resource": "${DNSZoneCreatorFunction.Arn}",
-              "Next": "2_DNSZoneVerification",
+              "Next": "2_DNSZoneVerifier",
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
@@ -374,9 +470,142 @@ Resources:
                 }
               ]
             },
-            "2_DNSZoneVerification": {
+            "2_DNSZoneVerifier": {
               "Type": "Task",
               "Resource": "${DNSZoneVerifierFunction.Arn}",
+              "Next": "3_SESDomainCreator",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 30,
+                  "MaxAttempts": 4320,
+                  "BackoffRate": 1.0
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "CatchAllNonRecoverableFailure"
+                }
+              ]
+            },
+            "3_SESDomainCreator": {
+              "Type": "Task",
+              "Resource": "${SESDomainCreatorFunction.Arn}",
+              "Next": "4_SESDomainVerifier",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 30,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "CatchAllNonRecoverableFailure"
+                }
+              ]
+            },
+            "4_SESDomainVerifier": {
+              "Type": "Task",
+              "Resource": "${SESDomainVerifierFunction.Arn}",
+              "Next": "5_ACMCertificateCreator",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 30,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "CatchAllNonRecoverableFailure"
+                }
+              ]
+            },
+            "5_ACMCertificateCreator": {
+              "Type": "Task",
+              "Resource": "${ACMCertificateCreatorFunction.Arn}",
+              "Next": "6_ACMCertificateVerifier",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 30,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "CatchAllNonRecoverableFailure"
+                }
+              ]
+            },
+            "6_ACMCertificateVerifier": {
+              "Type": "Task",
+              "Resource": "${ACMCertificateVerifierFunction.Arn}",
+              "Next": "7_CloudFrontDistributionCreator",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 30,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "CatchAllNonRecoverableFailure"
+                }
+              ]
+            },
+            "7_CloudFrontDistributionCreator": {
+              "Type": "Task",
+              "Resource": "${CloudFrontDistributionCreatorFunction.Arn}",
+              "Next": "8_CloudFrontDistributionDNSRecordCreator",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 30,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "CatchAllNonRecoverableFailure"
+                }
+              ]
+            },
+            "8_CloudFrontDistributionDNSRecordCreator": {
+              "Type": "Task",
+              "Resource": "${CloudFrontDistributionDNSRecordCreatorFunction.Arn}",
+              "Next": "9_CloudFrontDistributionVerifier",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 30,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "CatchAllNonRecoverableFailure"
+                }
+              ]
+            },
+            "9_CloudFrontDistributionVerifier": {
+              "Type": "Task",
+              "Resource": "${CloudFrontDistributionVerifierFunction.Arn}",
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
@@ -408,7 +637,6 @@ Resources:
             }
           }
         }
-
       RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/StatesExecutionRole-us-east-1
 
   ##
