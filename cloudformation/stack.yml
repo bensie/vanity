@@ -141,7 +141,7 @@ Resources:
   DNSZoneVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Custom domains hosted zone verification
+      Description: Custom domains hosted zone verifier
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
@@ -149,6 +149,40 @@ Resources:
         ZipFile: !Sub |
           exports.handler = (event, context, callback) => {
             callback(null, "Hello from DNS Zone Verification")
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+  SESDomainCreatorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains SES domain creator
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            callback(null, "Hello from SES domain creator")
+          }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+  SESDomainVerifierFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains SES domain verifier
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+            callback(null, "Hello from SES domain creator")
           }
       Environment:
         Variables:
