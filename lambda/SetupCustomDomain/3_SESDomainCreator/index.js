@@ -1,7 +1,6 @@
 const AWS = require('aws-sdk')
-const dynamodb = new AWS.DynamoDB({
-  region: process.env.REGION
-})
+AWS.config.update({ region: process.env.AWS_REGION })
+const dynamodb = new AWS.DynamoDB()
 const route53 = new AWS.Route53()
 const ses = new AWS.SES()
 
@@ -22,11 +21,11 @@ exports.handler = (event, context, callback) => {
       callback(err)
       return
     } else {
-      const item = data.Item
       if (Object.keys(data).length === 0) {
         callback(new Error('domain_name not found'))
         return
       } else {
+        const item = data.Item
         if (item.SESDomainIdentityCreatedAt) {
           callback(null, 'SES domain identity already exists, continuing')
           return

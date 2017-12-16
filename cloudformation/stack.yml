@@ -1,6 +1,20 @@
-Parameters: {}
-Resources:
+Parameters:
+  ExpectedNameserversParameter:
+    Description:
+      If you're using a reuable delegation set and have configured custom
+      CNAMEs for each nameserver, specify them here as a comma separated list
+      (ns1.mydomain.com,ns2.mydomain.com). When verifying domain configuration,
+      we'll use this list instead of the ones provided by Route53.
+    Type: String
+  ReusableDelegationSetIdParameter:
+    Description:
+      If you want all domains to point at the same nameservers, you'll need to
+      create a reusable delegation set with the aws-cli and provide its ID
+      here. If you leave this blank, each domain will be issued different
+      nameservers. See http://docs.aws.amazon.com/cli/latest/reference/route53/create-reusable-delegation-set.html
+    Type: String
 
+Resources:
   ##
   ## S3
   ##
@@ -48,7 +62,6 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
 
-
   ##
   ## Lambda
   ##
@@ -75,6 +88,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   HandleCustomDomainsShowFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -98,6 +113,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   HandleCustomDomainsDestroyFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -121,6 +138,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   DNSZoneCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -139,6 +158,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   DNSZoneVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -157,6 +178,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   SESDomainCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -175,6 +198,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   SESDomainVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -193,6 +218,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   ACMCertificateCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -211,6 +238,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   ACMCertificateVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -229,6 +258,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   CloudFrontDistributionCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -247,6 +278,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   CloudFrontDistributionDNSRecordCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -265,6 +298,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   CloudFrontDistributionVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -283,7 +318,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
-
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   CatchAllNonRecoverableFailureFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -302,6 +338,8 @@ Resources:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   ##
   ## API Gateway
   ##

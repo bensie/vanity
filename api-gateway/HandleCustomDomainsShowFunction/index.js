@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk')
-const dynamodb = new AWS.DynamoDB({
-  region: process.env.REGION
-})
+AWS.config.update({ region: process.env.AWS_REGION })
+const dynamodb = new AWS.DynamoDB()
+
 const payloadObjectWithData = data => ({
   domain_name: data.DomainName.S,
   origin_domain_name: data.OriginDomainName ? data.OriginDomainName.S : null,

@@ -1,7 +1,6 @@
 const AWS = require('aws-sdk')
-const dynamodb = new AWS.DynamoDB({
-  region: process.env.REGION
-})
+AWS.config.update({ region: process.env.AWS_REGION })
+const dynamodb = new AWS.DynamoDB()
 const route53 = new AWS.Route53()
 
 exports.handler = (event, context, callback) => {
@@ -21,11 +20,11 @@ exports.handler = (event, context, callback) => {
       callback(err)
       return
     } else {
-      const item = data.Item
       if (Object.keys(data).length === 0) {
         callback(new Error('domain_name not found'))
         return
       } else {
+        const item = data.Item
         if (item.Route53HostedZoneID) {
           callback(null, 'Route53 hosted zone already exists, continuing')
           return
