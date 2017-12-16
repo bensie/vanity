@@ -1,8 +1,8 @@
 const AWS = require('aws-sdk')
 AWS.config.update({ region: process.env.AWS_REGION })
 const dynamodb = new AWS.DynamoDB()
-const route53 = new AWS.Route53()
-const ses = new AWS.SES()
+const dns = require('dns')
+const parseDomain = require('parse-domain')
 
 class SkipToEndWithSuccessError extends Error {}
 
@@ -34,70 +34,55 @@ const getItem = itemParams => {
   })
 }
 
-const getVerifyDomainIdentityParams = item => {
-  return new Promise(resolve => {
-    const params = {
-      Domain: item.DomainName.S
-    }
-    resolve({ item, params })
-  })
-}
-
-const verifyDomainIdentity = ({ item, verifyDomainIdentityParams }) => {
+const fetchDomainRootNameservers = item => {
   return new Promise((resolve, reject) => {
-    if (item.SESDomainIdentityCreatedAt) {
-      reject(
-        new SkipToEndWithSuccessError(
-          'SES domain identity already exists, continuing'
-        )
-      )
-    } else {
-      ses.verifyDomainIdentity(verifyDomainIdentityParams, (err, data) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve({ item, data })
-        }
-      })
-    }
-  })
-}
+    const domainInfo = parseDomain(item.DomainName.S)
+    const registeredDomain = `${domainInfo.domain}.${domainInfo.tld}`
 
-const getRecordSetChanges = ({ item, domainIdentity }) => {
-  return new Promise(resolve => {
-    const changes = {
-      ChangeBatch: {
-        Changes: [
-          {
-            Action: 'UPSERT',
-            ResourceRecordSet: {
-              Name: `_amazonses.${item.DomainName.S}`,
-              ResourceRecords: [
-                {
-                  Value: `"${verify.VertificationToken}"`
-                }
-              ],
-              TTL: 3600,
-              Type: 'TXT'
-            }
-          }
-        ],
-        Comment: 'SES domain identity record'
-      },
-      HostedZoneId: item.Route53HostedZoneID.S
-    }
-  })
-}
-
-const changeResourceRecordSets = changes => {
-  return new Promise((resolve, reject) => {
-    route53.changeResourceRecordSets(recordSetChanges, (err, data) => {
+    dns.setServers(['8.8.8.8', '8.8.4.4'])
+    dns.resolveNs(registeredDomain, (err, addresses) => {
       if (err) {
         reject(err)
       } else {
-        resolve(data)
+        resolve({ item, addresses })
       }
     })
+  })
+}
+
+const fetchTargetDomainNameservers = ({ item, domainRootNameservers }) => {
+  return new Promise((resolve, reject) => {
+    dns.setServers([domainRootNameservers[0]])
+    dns.resolveNs(domainName, (err, addresses) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve({ item, addresses })
+      }
+    })
+  })
+}
+
+const verifyExpectedNameserversMatch = ({ item, targetDomainNameservers }) => {
+  return new Promise((resolve, reject) => {
+    let expectedNameservers
+    if (process.env.EXPECTED_NAMESERVERS !== '') {
+      expectedNameservers = process.env.EXPECTED_NAMESERVERS.split(',')
+    } else {
+      expectedNameservers = item.NameServers.SS
+    }
+    expectedNameservers.sort()
+    targetDomainNameservers.sort()
+
+    if (expectedNameservers === targetDomainNameservers) {
+      resolve({ item })
+    } else {
+      reject(
+        new Error(
+          `Target nameservers (${targetDomainNameservers}) do not match expected (${expectedNameservers})`
+        )
+      )
+    }
   })
 }
 
@@ -111,9 +96,9 @@ const updateItemParams = ({ item }) => {
         }
       },
       UpdateExpression:
-        'SET SESDomainIdentityCreatedAt=:SESDomainIdentityCreatedAt',
+        'SET NameserverDelegationVerifiedAt=:NameserverDelegationVerifiedAt',
       ExpressionAttributeValues: {
-        ':SESDomainIdentityCreatedAt': {
+        ':NameserverDelegationVerifiedAt': {
           N: `${Date.now()}`
         }
       }
@@ -141,11 +126,10 @@ exports.handler = (event, _context, callback) => {
 
   getItemParams(domainName)
     .then(getItem)
-    .then(getVerifyDomainIdentityParams)
-    .then(verifyDomainIdentity)
-    .then(getRecordSetChanges)
-    .then(changeResourceRecordSets)
-    .then(updateItemParams)
+    .then(fetchDomainRootNameservers)
+    .then(fetchTargetDomainNameservers)
+    .then(verifyExpectedNameserversMatch)
+    .then(getUpdateItemParams)
     .then(updateItem)
     .then(() => success())
     .catch(error => {
