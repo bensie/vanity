@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk')
 AWS.config.update({ region: process.env.AWS_REGION })
 const dynamodb = new AWS.DynamoDB()
-const ses = new AWS.SES()
+const acm = new AWS.ACM()
 
 class SkipToEndWithSuccessError extends Error {}
 
@@ -27,51 +27,32 @@ const getItem = domainName => {
   })
 }
 
-const getIdentityVerificationAttributes = ({ item }) => {
+const createCertificate = ({ item }) => {
   return new Promise((resolve, reject) => {
-    const params = {
-      Identities: [item.DomainName.S]
+    if (item.ACMCertificateArn) {
+      reject(
+        new SkipToEndNonError('ACM certificate already exists, continuing')
+      )
+      return
     }
-    ses.getIdentityVerificationAttributes(params, (err, data) => {
+
+    const params = {
+      DomainName: item.DomainName.S,
+      SubjectAlternativeNames: [`*.${item.DomainName.S}`],
+      IdempotencyToken: `${item.DomainName.S}${item.SetupStartedAt.N}`,
+      ValidationMethod: 'DNS'
+    }
+    acm.requestCertificate(params, (err, data) => {
       if (err) {
         reject(err)
       } else {
-        if (
-          data.VerificationAttributes[item.DomainName.S].VerificationStatus ===
-          'Success'
-        ) {
-          resolve({ item })
-        } else {
-          reject(new Error('SES TXT record not yet detected'))
-        }
+        resolve({ item, certificate: data })
       }
     })
   })
 }
 
-const getIdentityDkimAttributes = ({ item }) => {
-  return new Promise((resolve, reject) => {
-    const params = {
-      Identities: [item.DomainName.S]
-    }
-    ses.getIdentityDkimAttributes(params, (err, data) => {
-      if (err) {
-        reject(err)
-      } else {
-        if (
-          data.DkimAttributes[item.DomainName.S].DkimVerificationStatus ===
-          'Success'
-        ) {
-          resolve({ item })
-        } else {
-          reject(new Error('SES DKIM CNAMEs not yet detected'))
-        }
-      }
-    })
-  })
-}
-
-const getUpdateItemParams = ({ item }) => {
+const getUpdateItemParams = ({ item, certificate }) => {
   return new Promise(resolve => {
     const updateItemParams = {
       TableName: process.env.DYNAMODB_TABLE,
@@ -80,14 +61,10 @@ const getUpdateItemParams = ({ item }) => {
           S: item.DomainName.S
         }
       },
-      UpdateExpression:
-        'SET SESDomainIdentityVerifiedAt=:SESDomainIdentityVerifiedAt, SESDomainDKIMVerifiedAt=:SESDomainDKIMVerifiedAt',
+      UpdateExpression: 'SET ACMCertificateArn=:ACMCertificateArn',
       ExpressionAttributeValues: {
-        ':SESDomainIdentityVerifiedAt': {
-          N: `${Date.now()}`
-        },
-        ':SESDomainDKIMVerifiedAt': {
-          N: `${Date.now()}`
+        ':ACMCertificateArn': {
+          S: `${certificate.CertificateArn}`
         }
       }
     }
@@ -113,8 +90,7 @@ exports.handler = (event, _context, callback) => {
   const failure = err => callback(err)
 
   getItem(domainName)
-    .then(getIdentityVerificationAttributes)
-    .then(getIdentityDkimAttributes)
+    .then(createCertificate)
     .then(getUpdateItemParams)
     .then(updateItem)
     .then(() => success())
