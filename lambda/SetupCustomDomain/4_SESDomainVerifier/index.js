@@ -72,7 +72,7 @@ const getIdentityDkimAttributes = ({ item }) => {
   })
 }
 
-const updateItemParams = ({ item }) => {
+const getUpdateItemParams = ({ item }) => {
   return new Promise(resolve => {
     const updateItemParams = {
       TableName: process.env.DYNAMODB_TABLE,
