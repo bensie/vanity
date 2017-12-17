@@ -6,8 +6,8 @@ const ses = new AWS.SES()
 
 class SkipToEndWithSuccessError extends Error {}
 
-const getItemParams = domainName => {
-  return new Promise(resolve => {
+const getItem = domainName => {
+  return new Promise((resolve, reject) => {
     const params = {
       TableName: process.env.DYNAMODB_TABLE,
       Key: {
@@ -16,30 +16,24 @@ const getItemParams = domainName => {
         }
       }
     }
-    resolve(params)
-  })
-}
-
-const getItem = itemParams => {
-  return new Promise((resolve, reject) => {
-    dynamodb.getItem(itemParams, (err, data) => {
+    dynamodb.getItem(params, (err, data) => {
       if (err) {
         reject(err)
       } else if (Object.keys(data).length === 0) {
         reject(new Error('domain_name not found'))
       } else {
-        resolve(data.Item)
+        resolve({ item: data.Item })
       }
     })
   })
 }
 
-const getVerifyDomainIdentityParams = item => {
+const getVerifyDomainIdentityParams = ({ item }) => {
   return new Promise(resolve => {
-    const params = {
+    const verifyDomainIdentityParams = {
       Domain: item.DomainName.S
     }
-    resolve({ item, params })
+    resolve({ item, verifyDomainIdentityParams })
   })
 }
 
@@ -56,54 +50,84 @@ const verifyDomainIdentity = ({ item, verifyDomainIdentityParams }) => {
         if (err) {
           reject(err)
         } else {
-          resolve({ item, data })
+          resolve({ item, domainIdentity: data })
         }
       })
     }
   })
 }
 
-const getRecordSetChanges = ({ item, domainIdentity }) => {
-  return new Promise(resolve => {
-    const changes = {
-      ChangeBatch: {
-        Changes: [
-          {
-            Action: 'UPSERT',
-            ResourceRecordSet: {
-              Name: `_amazonses.${item.DomainName.S}`,
-              ResourceRecords: [
-                {
-                  Value: `"${verify.VertificationToken}"`
-                }
-              ],
-              TTL: 3600,
-              Type: 'TXT'
-            }
-          }
-        ],
-        Comment: 'SES domain identity record'
-      },
-      HostedZoneId: item.Route53HostedZoneID.S
-    }
-  })
-}
-
-const changeResourceRecordSets = changes => {
+const verifyDomainDkim = ({ item, domainIdentity }) => {
   return new Promise((resolve, reject) => {
-    route53.changeResourceRecordSets(recordSetChanges, (err, data) => {
+    params = {
+      Domain: item.DomainName.S
+    }
+    ses.verifyDomainDkim(params, (err, data) => {
       if (err) {
         reject(err)
       } else {
-        resolve(data)
+        resolve({ item, domainIdentity, domainDkim: data })
       }
     })
   })
 }
 
-const updateItemParams = ({ item }) => {
+const getRecordSetChanges = ({ item, domainIdentity, domainDkim }) => {
   return new Promise(resolve => {
-    const params = {
+    let changes = []
+    changes.push({
+      Action: 'UPSERT',
+      ResourceRecordSet: {
+        Name: `_amazonses.${item.DomainName.S}`,
+        ResourceRecords: [
+          {
+            Value: `"${domainIdentity.VertificationToken}"`
+          }
+        ],
+        TTL: 3600,
+        Type: 'TXT'
+      }
+    })
+    domainDkim.DkimTokens.forEach(token => {
+      changes.push({
+        Action: 'UPSERT',
+        ResourceRecordSet: {
+          Name: `${token}._domainkey.${item.DomainName.S}`,
+          ResourceRecords: [
+            {
+              Value: `${token}.dkim.amazonses.com.`
+            }
+          ],
+          TTL: 3600,
+          Type: 'CNAME'
+        }
+      })
+    })
+    const recordSetChanges = {
+      ChangeBatch: {
+        Changes: changes
+      },
+      HostedZoneId: item.Route53HostedZoneID.S
+    }
+    resolve({ item, recordSetChanges })
+  })
+}
+
+const changeResourceRecordSets = ({ item, recordSetChanges }) => {
+  return new Promise((resolve, reject) => {
+    route53.changeResourceRecordSets(recordSetChanges, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve({ item })
+      }
+    })
+  })
+}
+
+const getUpdateItemParams = ({ item }) => {
+  return new Promise(resolve => {
+    const updateItemParams = {
       TableName: process.env.DYNAMODB_TABLE,
       Key: {
         DomainName: {
@@ -118,7 +142,7 @@ const updateItemParams = ({ item }) => {
         }
       }
     }
-    resolve({ item, params })
+    resolve({ item, updateItemParams })
   })
 }
 
@@ -139,13 +163,13 @@ exports.handler = (event, _context, callback) => {
   const success = () => callback(null, { domainName })
   const failure = err => callback(err)
 
-  getItemParams(domainName)
-    .then(getItem)
+  getItem(domainName)
     .then(getVerifyDomainIdentityParams)
     .then(verifyDomainIdentity)
+    .then(verifyDomainDkim)
     .then(getRecordSetChanges)
     .then(changeResourceRecordSets)
-    .then(updateItemParams)
+    .then(getUpdateItemParams)
     .then(updateItem)
     .then(() => success())
     .catch(error => {

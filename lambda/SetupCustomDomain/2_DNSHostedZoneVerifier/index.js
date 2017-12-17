@@ -6,8 +6,8 @@ const parseDomain = require('parse-domain')
 
 class SkipToEndWithSuccessError extends Error {}
 
-const getItemParams = domainName => {
-  return new Promise(resolve => {
+const getItem = domainName => {
+  return new Promise((resolve, reject) => {
     const params = {
       TableName: process.env.DYNAMODB_TABLE,
       Key: {
@@ -16,25 +16,19 @@ const getItemParams = domainName => {
         }
       }
     }
-    resolve(params)
-  })
-}
-
-const getItem = itemParams => {
-  return new Promise((resolve, reject) => {
-    dynamodb.getItem(itemParams, (err, data) => {
+    dynamodb.getItem(params, (err, data) => {
       if (err) {
         reject(err)
       } else if (Object.keys(data).length === 0) {
         reject(new Error('domain_name not found'))
       } else {
-        resolve(data.Item)
+        resolve({ item: data.Item })
       }
     })
   })
 }
 
-const fetchDomainRootNameservers = item => {
+const fetchDomainRootNameservers = ({ item }) => {
   return new Promise((resolve, reject) => {
     const domainInfo = parseDomain(item.DomainName.S)
     const registeredDomain = `${domainInfo.domain}.${domainInfo.tld}`
@@ -44,7 +38,7 @@ const fetchDomainRootNameservers = item => {
       if (err) {
         reject(err)
       } else {
-        resolve({ item, addresses })
+        resolve({ item, domainRootNameservers: addresses })
       }
     })
   })
@@ -57,7 +51,7 @@ const fetchTargetDomainNameservers = ({ item, domainRootNameservers }) => {
       if (err) {
         reject(err)
       } else {
-        resolve({ item, addresses })
+        resolve({ item, targetDomainNameservers: addresses })
       }
     })
   })
@@ -86,9 +80,9 @@ const verifyExpectedNameserversMatch = ({ item, targetDomainNameservers }) => {
   })
 }
 
-const updateItemParams = ({ item }) => {
+const getUpdateItemParams = ({ item }) => {
   return new Promise(resolve => {
-    const params = {
+    const updateItemParams = {
       TableName: process.env.DYNAMODB_TABLE,
       Key: {
         DomainName: {
@@ -103,7 +97,7 @@ const updateItemParams = ({ item }) => {
         }
       }
     }
-    resolve({ item, params })
+    resolve({ item, updateItemParams })
   })
 }
 
@@ -124,8 +118,7 @@ exports.handler = (event, _context, callback) => {
   const success = () => callback(null, { domainName })
   const failure = err => callback(err)
 
-  getItemParams(domainName)
-    .then(getItem)
+  getItem(domainName)
     .then(fetchDomainRootNameservers)
     .then(fetchTargetDomainNameservers)
     .then(verifyExpectedNameserversMatch)
