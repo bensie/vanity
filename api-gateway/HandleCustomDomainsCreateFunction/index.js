@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk')
 AWS.config.update({ region: process.env.AWS_REGION })
 const dynamodb = new AWS.DynamoDB()
+const stepfunctions = new AWS.StepFunctions()
 
 const payloadObjectWithData = data => ({
   domain_name: data.DomainName.S,
@@ -102,22 +103,39 @@ exports.handler = (event, context, callback) => {
       }
       callback(null, response)
     } else {
-      initialResponsePayload = {
-        DomainName: {
-          S: domainName
-        },
-        SetupStartedAt: {
-          N: setupStartedAt
-        },
-        OriginDomainName: {
-          S: originDomainName
+      const params = {
+        stateMachineArn: process.env.STATE_MACHINE_ARN,
+        input: JSON.stringify({ domainName })
+      }
+      stepfunctions.startExecution(params, (err, data) => {
+        if (err) {
+          console.log(err, err.stack)
+          const response = {
+            statusCode: 400,
+            body: JSON.stringify({
+              message: 'failed to start step function execution'
+            })
+          }
+          callback(null, response)
+        } else {
+          const initialResponsePayload = {
+            DomainName: {
+              S: domainName
+            },
+            SetupStartedAt: {
+              N: setupStartedAt
+            },
+            OriginDomainName: {
+              S: originDomainName
+            }
+          }
+          const response = {
+            statusCode: 201,
+            body: JSON.stringify(payloadObjectWithData(initialResponsePayload))
+          }
+          callback(null, response)
         }
-      }
-      const response = {
-        statusCode: 201,
-        body: JSON.stringify(payloadObjectWithData(initialResponsePayload))
-      }
-      callback(null, response)
+      })
     }
   })
 }

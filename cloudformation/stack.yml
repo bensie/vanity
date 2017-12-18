@@ -86,6 +86,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
+          STATE_MACHINE_ARN: !Ref StateMachine
   HandleCustomDomainsShowFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -107,6 +108,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
+          STATE_MACHINE_ARN: !Ref StateMachine
   HandleCustomDomainsDestroyFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -132,6 +134,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
+          STATE_MACHINE_ARN: !Ref StateMachine
   DNSZoneCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
