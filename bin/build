@@ -19,8 +19,6 @@ pushd lambda
       echo "Building $func..."
       pushd $func
         rm -rf node_modules
-        git rm package.json -f
-        git rm yarn.lock -f
         yarn install
       popd
     done
