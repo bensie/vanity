@@ -1,5 +1,7 @@
 #!/bin/bash
 pwd="`pwd`"
+version=$(<VERSION)
+version=${version// /}
 
 if [ -d build ]; then rm -rf build; fi
 mkdir -p build/api-gateway
@@ -8,12 +10,11 @@ mkdir -p build/cloudformation
 
 # API Gateway Handlers
 pushd api-gateway
-  for func in */; do
-    echo "Building $func..."
-    pushd $func
+  for handler in */; do
+    pushd $handler
       rm -rf node_modules
       yarn install
-      zip -r $pwd/build/api-gateway/${func%?}.zip .
+      zip -r $pwd/build/api-gateway/${handler%?}.zip .
     popd
   done
 popd
@@ -21,12 +22,11 @@ popd
 # Lambda Functions
 pushd lambda
   pushd SetupCustomDomain
-    for func in */; do
-      echo "Building $func..."
-      pushd $func
+    for lambdafunction in */; do
+      pushd $lambdafunction
         rm -rf node_modules
         yarn install
-        zip -r $pwd/build/lambda/SetupCustomDomain/${func%?}.zip .
+        zip -r $pwd/build/lambda/SetupCustomDomain/${lambdafunction%?}.zip .
       popd
     done
   popd
@@ -34,5 +34,6 @@ popd
 
 # CloudFormation Template
 pushd cloudformation
-
+  cp stack.yml $pwd/build/cloudformation/stack.yml
+  printf "\nMappings:\n  StaticVariables:\n    Versions:\n      Current: $version" >> $pwd/build/cloudformation/stack.yml
 popd

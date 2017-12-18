@@ -9,9 +9,20 @@ version=${version// /}
 
 pushd build
   pushd api-gateway
-    for func in *.zip; do
-      echo "Publishing $func..."
-      aws s3 cp $func s3://$bucket/$version/api-gateway/$func
+    for zip in *.zip; do
+      aws s3 cp $zip s3://$bucket/$version/api-gateway/$zip --acl public-read
     done
+  popd
+
+  pushd lambda
+    pushd SetupCustomDomain
+      for zip in *.zip; do
+        aws s3 cp $zip s3://$bucket/$version/lambda/SetupCustomDomain/$zip --acl public-read
+      done
+    popd
+  popd
+
+  pushd cloudformation
+    aws s3 cp stack.yml s3://$bucket/$version/cloudformation/stack.yml --acl public-read
   popd
 popd

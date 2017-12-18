@@ -75,14 +75,10 @@ Resources:
       Timeout: 5
       MemorySize: 512
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            var response = {
-              statusCode: 200,
-              body: JSON.stringify({ custom_domains_create: true })
-            }
-            callback(null, response)
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/api-gateway/HandleCustomDomainsCreateFunction.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
@@ -100,14 +96,10 @@ Resources:
       Timeout: 5
       MemorySize: 512
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            var response = {
-              statusCode: 200,
-              body: JSON.stringify({ custom_domains_show: true })
-            }
-            callback(null, response)
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/api-gateway/HandleCustomDomainsShowFunction.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
@@ -148,11 +140,10 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            const { domainName } = event
-            callback(null, { domainName })
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/SetupCustomDomain/1_DNSHostedZoneCreator.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
@@ -168,11 +159,10 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            const { domainName } = event
-            callback(null, { domainName })
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/SetupCustomDomain/2_DNSHostedZoneVerifier.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
@@ -188,11 +178,10 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            const { domainName } = event
-            callback(null, { domainName })
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/SetupCustomDomain/3_SESDomainCreator.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
@@ -208,11 +197,10 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            const { domainName } = event
-            callback(null, { domainName })
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/SetupCustomDomain/4_SESDomainVerifier.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
@@ -228,11 +216,10 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            const { domainName } = event
-            callback(null, { domainName })
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/SetupCustomDomain/5_ACMCertificateCreator.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
@@ -248,11 +235,10 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            const { domainName } = event
-            callback(null, { domainName })
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/SetupCustomDomain/6_ACMCertificateVerifier.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
@@ -268,11 +254,10 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            const { domainName } = event
-            callback(null, { domainName })
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/SetupCustomDomain/7_CloudFrontDistributionCreator.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
@@ -288,11 +273,10 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            const { domainName } = event
-            callback(null, { domainName })
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/SetupCustomDomain/8_CloudFrontDistributionDNSRecordCreator.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
@@ -308,11 +292,10 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            const { domainName } = event
-            callback(null, { domainName })
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/SetupCustomDomain/9_CloudFrontDistributionVerifier.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
