@@ -1,0 +1,17 @@
+#!/bin/bash
+
+./bin/build
+
+bucket=aws-custom-domains
+
+version=$(<VERSION)
+version=${version// /}
+
+pushd build
+  pushd api-gateway
+    for func in *.zip; do
+      echo "Publishing $func..."
+      aws s3 cp $func s3://$bucket/$version/api-gateway/$func
+    done
+  popd
+popd
