@@ -1,6 +1,10 @@
-#!/usr/bin/env bash
+#!/bin/bash
+pwd="`pwd`"
 
-pwd=`pwd`
+if [ -d build ]; then rm -rf build; fi
+mkdir -p build/api-gateway
+mkdir -p build/lambda/SetupCustomDomain
+mkdir -p build/cloudformation
 
 # API Gateway Handlers
 pushd api-gateway
@@ -9,10 +13,12 @@ pushd api-gateway
     pushd $func
       rm -rf node_modules
       yarn install
+      zip -r $pwd/build/api-gateway/${func%?}.zip .
     popd
   done
 popd
 
+# Lambda Functions
 pushd lambda
   pushd SetupCustomDomain
     for func in */; do
@@ -20,7 +26,13 @@ pushd lambda
       pushd $func
         rm -rf node_modules
         yarn install
+        zip -r $pwd/build/lambda/SetupCustomDomain/${func%?}.zip .
       popd
     done
   popd
+popd
+
+# CloudFormation Template
+pushd cloudformation
+
 popd
