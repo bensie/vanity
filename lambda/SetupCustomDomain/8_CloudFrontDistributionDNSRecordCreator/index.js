@@ -70,7 +70,6 @@ exports.handler = (event, _context, callback) => {
   const failure = err => callback(err)
 
   getItem(domainName)
-    .then(createDistribution)
     .then(getRecordSetChanges)
     .then(changeResourceRecordSets)
     .then(() => success())
