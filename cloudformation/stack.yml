@@ -745,6 +745,26 @@ Resources:
                 Resource: !Sub
                   - "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Table}"
                   - { Table: !Ref CustomDomainsTable }
+        - PolicyName: custom-domains-ses-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:VerifyDomainIdentity
+                  - ses:VerifyDomainDkim
+                  - ses:GetIdentityVerificationAttributes
+                  - ses:GetIdentityDkimAttributes
+                  - ses:SetIdentityDkimEnabled
+                Resource: "*"
+        - PolicyName: custom-domains-stepfunctions-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - states:StartExecution
+                Resource: "*"
 
 Outputs:
   CustomDomainsAPIURL:

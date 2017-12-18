@@ -46,12 +46,18 @@ const fetchDomainRootNameservers = ({ item }) => {
 
 const fetchTargetDomainNameservers = ({ item, domainRootNameservers }) => {
   return new Promise((resolve, reject) => {
-    dns.setServers([domainRootNameservers[0]])
-    dns.resolveNs(domainName, (err, addresses) => {
+    dns.resolve4(domainRootNameservers[0], (err, addresses) => {
       if (err) {
         reject(err)
       } else {
-        resolve({ item, targetDomainNameservers: addresses })
+        dns.setServers([addresses[0]])
+        dns.resolveNs(domainName, (err, addresses) => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve({ item, targetDomainNameservers: addresses })
+          }
+        })
       }
     })
   })
