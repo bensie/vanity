@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+pwd=`pwd`
+
+# API Gateway Handlers
+pushd api-gateway
+  for func in */; do
+    echo "Building $func..."
+    pushd $func
+      rm -rf node_modules
+      yarn install
+    popd
+  done
+popd
+
+pushd lambda
+  pushd SetupCustomDomain
+    for func in */; do
+      echo "Building $func..."
+      pushd $func
+        rm -rf node_modules
+        git rm package.json -f
+        git rm yarn.lock -f
+        yarn install
+      popd
+    done
+  popd
+popd
