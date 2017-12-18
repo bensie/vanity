@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk')
 AWS.config.update({ region: process.env.AWS_REGION })
 const dynamodb = new AWS.DynamoDB()
-const route53 = new AWS.Route53()
+const cloudfront = new AWS.CloudFront()
 
 class SkipToEndWithSuccessError extends Error {}
 
@@ -27,38 +27,28 @@ const getItem = domainName => {
   })
 }
 
-const getCreateZoneParams = ({ item }) => {
-  return new Promise(resolve => {
-    const createZoneParams = {
-      Name: item.DomainName.S,
-      CallerReference: `${item.DomainName.S}${item.SetupStartedAt.N}`,
-      DelegationSetId: process.env.DELEGATION_SET_ID
-    }
-    resolve({ item, createZoneParams })
-  })
-}
-
-const createZone = ({ item, createZoneParams }) => {
+const verifyDistribution = ({ item }) => {
   return new Promise((resolve, reject) => {
-    if (item.Route53HostedZoneID) {
-      reject(
-        new SkipToEndWithSuccessError(
-          'Route53 hosted zone already exists, continuing'
-        )
-      )
-      return
+    const params = {
+      Id: item.CloudFrontDistributionID.S
     }
-    route53.createHostedZone(createZoneParams, (err, data) => {
+
+    cloudfront.getDistribution(params, (err, data) => {
       if (err) {
         reject(err)
       } else {
-        resolve({ item, hostedZone: data })
+        const status = data.Distribution.Status
+        if (status === 'Deployed') {
+          resolve({ item, distribution: data })
+        } else {
+          reject(new Error(`CloudFront distribution status is ${status}`))
+        }
       }
     })
   })
 }
 
-const getUpdateItemParams = ({ item, hostedZone }) => {
+const getUpdateItemParams = ({ item, distribution }) => {
   return new Promise(resolve => {
     const updateItemParams = {
       TableName: process.env.DYNAMODB_TABLE,
@@ -68,16 +58,10 @@ const getUpdateItemParams = ({ item, hostedZone }) => {
         }
       },
       UpdateExpression:
-        'SET Route53HostedZoneCreatedAt=:Route53HostedZoneCreatedAt, Nameservers=:Nameservers, Route53HostedZoneID=:Route53HostedZoneID',
+        'SET CloudFrontDistributionVerifiedAt=:CloudFrontDistributionVerifiedAt',
       ExpressionAttributeValues: {
-        ':Route53HostedZoneCreatedAt': {
+        ':CloudFrontDistributionVerifiedAt': {
           N: `${Date.now()}`
-        },
-        ':Nameservers': {
-          SS: hostedZone.DelegationSet.NameServers
-        },
-        ':Route53HostedZoneID': {
-          S: hostedZone.HostedZone.Id
         }
       }
     }
@@ -87,7 +71,7 @@ const getUpdateItemParams = ({ item, hostedZone }) => {
 
 const updateItem = ({ item, updateItemParams }) => {
   return new Promise((resolve, reject) => {
-    dynamodb.updateItem(updateItemParams, (err, _data) => {
+    dynamodb.updateItem(updateItemParams, (err, data) => {
       if (err) {
         reject(err)
       } else {
@@ -103,8 +87,7 @@ exports.handler = (event, _context, callback) => {
   const failure = err => callback(err)
 
   getItem(domainName)
-    .then(getCreateZoneParams)
-    .then(createZone)
+    .then(verifyDistribution)
     .then(getUpdateItemParams)
     .then(updateItem)
     .then(() => success())
