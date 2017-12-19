@@ -271,7 +271,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
-      Timeout: 10
+      Timeout: 20
       Code:
         S3Bucket: aws-custom-domains
         S3Key: !Sub
