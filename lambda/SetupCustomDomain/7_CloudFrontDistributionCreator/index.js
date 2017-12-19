@@ -5,6 +5,10 @@ const cloudfront = new AWS.CloudFront()
 
 class SkipToEndWithSuccessError extends Error {}
 
+const idempotencyToken = (setupStartedAt, domainName) => {
+  return `${setupStartedAt}${domainName}`.replace(/\W+/g, '').substring(0, 32)
+}
+
 const getItem = domainName => {
   return new Promise((resolve, reject) => {
     const params = {
@@ -31,9 +35,9 @@ const createDistribution = ({ item }) => {
   return new Promise((resolve, reject) => {
     const params = {
       DistributionConfig: {
-        CallerReference: `${item.DomainName.S}${item.SetupStartedAt.N}`.replace(
-          /\W+/g,
-          ''
+        CallerReference: idempotencyToken(
+          item.SetupStartedAt.N,
+          item.DomainName.S
         ),
         Aliases: {
           Quantity: 1,

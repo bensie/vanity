@@ -5,6 +5,10 @@ const route53 = new AWS.Route53()
 
 class SkipToEndWithSuccessError extends Error {}
 
+const idempotencyToken = (setupStartedAt, domainName) => {
+  return `${setupStartedAt}${domainName}`.replace(/\W+/g, '').substring(0, 32)
+}
+
 const getItem = domainName => {
   return new Promise((resolve, reject) => {
     const params = {
@@ -31,9 +35,9 @@ const getCreateZoneParams = ({ item }) => {
   return new Promise(resolve => {
     const createZoneParams = {
       Name: item.DomainName.S,
-      CallerReference: `${item.DomainName.S}${item.SetupStartedAt.N}`.replace(
-        /\W+/g,
-        ''
+      CallerReference: idempotencyToken(
+        item.SetupStartedAt.N,
+        item.DomainName.S
       ),
       DelegationSetId: process.env.DELEGATION_SET_ID
     }

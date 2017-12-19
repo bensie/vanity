@@ -6,6 +6,10 @@ const route53 = new AWS.Route53()
 
 class SkipToEndWithSuccessError extends Error {}
 
+const idempotencyToken = (setupStartedAt, domainName) => {
+  return `${setupStartedAt}${domainName}`.replace(/\W+/g, '').substring(0, 32)
+}
+
 const getItem = domainName => {
   return new Promise((resolve, reject) => {
     const params = {
@@ -40,9 +44,9 @@ const createCertificate = ({ item }) => {
     const params = {
       DomainName: item.DomainName.S,
       SubjectAlternativeNames: [`*.${item.DomainName.S}`],
-      IdempotencyToken: `${item.DomainName.S}${item.SetupStartedAt.N}`.replace(
-        /\W+/g,
-        ''
+      IdempotencyToken: idempotencyToken(
+        item.SetupStartedAt.N,
+        item.DomainName.S
       ),
       ValidationMethod: 'DNS'
     }
