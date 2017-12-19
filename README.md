@@ -33,7 +33,7 @@ The following AWS services are used:
 
 Click the "Launch Stack" to bootstrap everything you need in the us-east-1 (N. Virginia) region.
 
-[![Launch stack in us-east-1](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=custom-domains&templateURL=https://s3.amazonaws.com/aws-custom-domains/v1.0.0-beta3/cloudformation/stack.yml)
+[![Launch stack in us-east-1](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=custom-domains&templateURL=https://s3.amazonaws.com/aws-custom-domains/v1.0.0-beta16/cloudformation/stack.yml)
 
 After creating your CloudFormation stack, the "Outputs" section of the Stack Detail contains the API Gateway base URL (called CustomDomainsAPIURL) for your custom domain service. It looks something like `https://xxxxxx.execute-api.us-east-1.amazonaws.com/v1/custom_domains`
 
