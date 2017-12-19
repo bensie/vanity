@@ -482,7 +482,7 @@ Resources:
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "IntervalSeconds": 1,
+                  "IntervalSeconds": 2,
                   "MaxAttempts": 5,
                   "BackoffRate": 1.0
                 }
@@ -520,7 +520,7 @@ Resources:
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "IntervalSeconds": 30,
+                  "IntervalSeconds": 2,
                   "MaxAttempts": 5,
                   "BackoffRate": 1.0
                 }
@@ -540,7 +540,7 @@ Resources:
                 {
                   "ErrorEquals": ["States.ALL"],
                   "IntervalSeconds": 30,
-                  "MaxAttempts": 5,
+                  "MaxAttempts": 480,
                   "BackoffRate": 1.0
                 }
               ],
@@ -558,7 +558,7 @@ Resources:
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "IntervalSeconds": 30,
+                  "IntervalSeconds": 2,
                   "MaxAttempts": 5,
                   "BackoffRate": 1.0
                 }
@@ -578,7 +578,7 @@ Resources:
                 {
                   "ErrorEquals": ["States.ALL"],
                   "IntervalSeconds": 30,
-                  "MaxAttempts": 5,
+                  "MaxAttempts": 480,
                   "BackoffRate": 1.0
                 }
               ],
@@ -596,7 +596,7 @@ Resources:
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "IntervalSeconds": 30,
+                  "IntervalSeconds": 2,
                   "MaxAttempts": 5,
                   "BackoffRate": 1.0
                 }
@@ -615,7 +615,7 @@ Resources:
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "IntervalSeconds": 30,
+                  "IntervalSeconds": 2,
                   "MaxAttempts": 5,
                   "BackoffRate": 1.0
                 }
@@ -633,8 +633,8 @@ Resources:
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "IntervalSeconds": 30,
-                  "MaxAttempts": 5,
+                  "IntervalSeconds": 60,
+                  "MaxAttempts": 240,
                   "BackoffRate": 1.0
                 }
               ],
@@ -652,7 +652,7 @@ Resources:
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "IntervalSeconds": 2,
+                  "IntervalSeconds": 1,
                   "MaxAttempts": 5,
                   "BackoffRate": 1.0
                 }
@@ -661,6 +661,7 @@ Resources:
             }
           }
         }
+
       RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/StatesExecutionRole-us-east-1
 
   ##
