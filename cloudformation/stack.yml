@@ -151,6 +151,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
+      Timeout: 10
       Code:
         S3Bucket: aws-custom-domains
         S3Key: !Sub
@@ -170,6 +171,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
+      Timeout: 10
       Code:
         S3Bucket: aws-custom-domains
         S3Key: !Sub
@@ -189,6 +191,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
+      Timeout: 10
       Code:
         S3Bucket: aws-custom-domains
         S3Key: !Sub
@@ -208,6 +211,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
+      Timeout: 10
       Code:
         S3Bucket: aws-custom-domains
         S3Key: !Sub
@@ -227,6 +231,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
+      Timeout: 10
       Code:
         S3Bucket: aws-custom-domains
         S3Key: !Sub
@@ -246,6 +251,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
+      Timeout: 10
       Code:
         S3Bucket: aws-custom-domains
         S3Key: !Sub
@@ -265,6 +271,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
+      Timeout: 10
       Code:
         S3Bucket: aws-custom-domains
         S3Key: !Sub
@@ -284,6 +291,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
+      Timeout: 10
       Code:
         S3Bucket: aws-custom-domains
         S3Key: !Sub
@@ -303,6 +311,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
+      Timeout: 10
       Code:
         S3Bucket: aws-custom-domains
         S3Key: !Sub
@@ -322,6 +331,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
+      Timeout: 10
       Code:
         ZipFile: !Sub |
           exports.handler = (event, context, callback) => {
@@ -342,6 +352,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
+      Timeout: 10
       Code:
         S3Bucket: aws-custom-domains
         S3Key: !Sub
