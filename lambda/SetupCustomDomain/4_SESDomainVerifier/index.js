@@ -71,6 +71,22 @@ const getIdentityDkimAttributes = ({ item }) => {
   })
 }
 
+const enableDkim = ({ item }) => {
+  return new Promise((resolve, reject) => {
+    const params = {
+      Identity: item.DomainName.S,
+      DkimEnabled: true
+    }
+    ses.setIdentityDkimEnabled(params, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve({ item })
+      }
+    })
+  })
+}
+
 const getUpdateItemParams = ({ item }) => {
   return new Promise(resolve => {
     const updateItemParams = {
@@ -115,6 +131,7 @@ exports.handler = (event, _context, callback) => {
   getItem(domainName)
     .then(getIdentityVerificationAttributes)
     .then(getIdentityDkimAttributes)
+    .then(enableDkim)
     .then(getUpdateItemParams)
     .then(updateItem)
     .then(() => success())
