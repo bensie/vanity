@@ -89,7 +89,7 @@ const getRecordSetChanges = ({ item, certificate }) => {
               Name: `${requiredRecord.Name}.`,
               ResourceRecords: [
                 {
-                  Value: `${requiredRecord.Name}.`
+                  Value: `${requiredRecord.Value}.`
                 }
               ],
               TTL: 3600,
