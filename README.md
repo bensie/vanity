@@ -12,7 +12,7 @@ It runs entirely and securely in your own AWS account using only services that a
 
 ## Dependencies
 
-With a single click and the default settings, your copy of this service can be up and running in seconds. Know that some AWS services will incur usage costs (it's minimal though, pennies per month in most cases).
+With a few clicks and the default settings, your copy of this service can be up and running in about 3 minutes. Know that some AWS services will incur usage costs (it's minimal though, pennies per month in most cases).
 
 The following AWS services are used:
 
@@ -26,11 +26,14 @@ The following AWS services are used:
 * Route 53
 * S3
 * SES
+* SNS
 * Step Functions
 
 ## Installation
 
 Click the "Launch Stack" to bootstrap everything you need in the us-east-1 (N. Virginia) region.
+
+[![Launch stack in us-east-1](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=custom-domains&templateURL=https://s3.amazonaws.com/aws-custom-domains/v1.0.0-beta3/cloudformation/stack.yml)
 
 After creating your CloudFormation stack, the "Outputs" section of the Stack Detail contains the API Gateway base URL (called CustomDomainsAPIURL) for your custom domain service. It looks something like `https://xxxxxx.execute-api.us-east-1.amazonaws.com/v1/custom_domains`
 
