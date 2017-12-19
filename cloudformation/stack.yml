@@ -356,6 +356,7 @@ Resources:
     Properties:
       EventSourceArn: !GetAtt CustomDomainsTable.StreamArn
       FunctionName: !GetAtt StreamToSNSTriggerFunction.Arn
+      StartingPosition: TRIM_HORIZON
 
   ##
   ## API Gateway
@@ -801,7 +802,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - states:StartExecution
-                Resource: !Ref StateMachine
+                Resource: "*" # !Ref StateMachine causes circular dep
         - PolicyName: custom-domains-sns-access
           PolicyDocument:
             Version: "2012-10-17"
