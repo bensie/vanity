@@ -6,6 +6,7 @@ version=${version// /}
 if [ -d build ]; then rm -rf build; fi
 mkdir -p build/api-gateway
 mkdir -p build/lambda/SetupCustomDomain
+mkdir -p build/dynamodb
 mkdir -p build/cloudformation
 
 # API Gateway Handlers
@@ -30,6 +31,17 @@ pushd lambda
       popd
     done
   popd
+popd
+
+# DynamoDB Stream Functions
+pushd dynamodb
+  for lambdafunction in */; do
+    pushd $lambdafunction
+      rm -rf node_modules
+      yarn install
+      zip -r $pwd/build/dynamodb/${lambdafunction%?}.zip .
+    popd
+  done
 popd
 
 # CloudFormation Template

@@ -61,6 +61,15 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  ##
+  ## SNS
+  ##
+  TableStreamTopic:
+    Type: AWS::SNS::Topic
+
 
   ##
   ## Lambda
@@ -326,6 +335,28 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
+  StreamToSNSTriggerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains DynamoDB stream to SNS trigger
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Code:
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/dynamodb/StreamToSNSTrigger.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_STREAM_SNS_TOPIC: !Ref TableStreamTopic
+  DynamoDBStreamToSNSFunctionSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt CustomDomainsTable.StreamArn
+      FunctionName: !GetAtt StreamToSNSTriggerFunction.Arn
+
   ##
   ## API Gateway
   ##
@@ -705,10 +736,6 @@ Resources:
                   - route53:ListHostedZones
                   - route53:DeleteHostedZone
                   - route53:ChangeResourceRecordSets
-                  - route53:CreateReusableDelegationSet
-                  - route53:GetReusableDelegationSet
-                  - route53:ListReusableDelegationSets
-                  - route53:DeleteReusableDelegationSet
                 Resource: "*"
         - PolicyName: custom-domains-cloudfront-access
           PolicyDocument:
@@ -743,9 +770,18 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
                   - dynamodb:DeleteItem
-                Resource: !Sub
-                  - "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Table}"
-                  - { Table: !Ref CustomDomainsTable }
+                Resource: !GetAtt CustomDomainsTable.Arn
+        - PolicyName: custom-domains-dynamodb-stream-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:ListStreams
+                Resource: !Sub ${CustomDomainsTable.Arn}/stream/*
         - PolicyName: custom-domains-ses-access
           PolicyDocument:
             Version: "2012-10-17"
@@ -765,7 +801,15 @@ Resources:
               - Effect: Allow
                 Action:
                   - states:StartExecution
-                Resource: "*"
+                Resource: !Ref StateMachine
+        - PolicyName: custom-domains-sns-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref TableStreamTopic
 
 Outputs:
   CustomDomainsAPIURL:

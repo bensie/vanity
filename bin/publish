@@ -22,6 +22,12 @@ pushd build
     popd
   popd
 
+  pushd dynamodb
+    for zip in *.zip; do
+      aws s3 cp $zip s3://$bucket/$version/dynamodb/$zip --acl public-read
+    done
+  popd
+
   pushd cloudformation
     aws s3 cp stack.yml s3://$bucket/$version/cloudformation/stack.yml --acl public-read
   popd
