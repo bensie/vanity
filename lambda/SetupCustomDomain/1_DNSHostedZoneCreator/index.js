@@ -31,7 +31,10 @@ const getCreateZoneParams = ({ item }) => {
   return new Promise(resolve => {
     const createZoneParams = {
       Name: item.DomainName.S,
-      CallerReference: `${item.DomainName.S}${item.SetupStartedAt.N}`,
+      CallerReference: `${item.DomainName.S}${item.SetupStartedAt.N}`.replace(
+        /\W+/g,
+        ''
+      ),
       DelegationSetId: process.env.DELEGATION_SET_ID
     }
     resolve({ item, createZoneParams })

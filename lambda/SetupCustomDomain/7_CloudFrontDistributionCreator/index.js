@@ -31,7 +31,10 @@ const createDistribution = ({ item }) => {
   return new Promise((resolve, reject) => {
     const params = {
       DistributionConfig: {
-        CallerReference: `${item.DomainName.S}${item.SetupStartedAt.N}`,
+        CallerReference: `${item.DomainName.S}${item.SetupStartedAt.N}`.replace(
+          /\W+/g,
+          ''
+        ),
         Aliases: {
           Quantity: 1,
           Items: [item.DomainName.S]

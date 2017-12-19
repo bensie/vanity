@@ -40,7 +40,10 @@ const createCertificate = ({ item }) => {
     const params = {
       DomainName: item.DomainName.S,
       SubjectAlternativeNames: [`*.${item.DomainName.S}`],
-      IdempotencyToken: `${item.DomainName.S}${item.SetupStartedAt.N}`,
+      IdempotencyToken: `${item.DomainName.S}${item.SetupStartedAt.N}`.replace(
+        /\W+/g,
+        ''
+      ),
       ValidationMethod: 'DNS'
     }
     acm.requestCertificate(params, (err, data) => {

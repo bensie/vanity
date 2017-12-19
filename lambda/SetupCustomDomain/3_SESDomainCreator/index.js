@@ -81,7 +81,7 @@ const getRecordSetChanges = ({ item, domainIdentity, domainDkim }) => {
         Name: `_amazonses.${item.DomainName.S}`,
         ResourceRecords: [
           {
-            Value: `"${domainIdentity.VertificationToken}"`
+            Value: `"${domainIdentity.VerificationToken}"`
           }
         ],
         TTL: 3600,

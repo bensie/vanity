@@ -115,12 +115,15 @@ const verifyExpectedNameserversMatch = ({ item, targetDomainNameservers }) => {
     if (process.env.EXPECTED_NAMESERVERS !== '') {
       expectedNameservers = process.env.EXPECTED_NAMESERVERS.split(',')
     } else {
-      expectedNameservers = item.NameServers.SS
+      expectedNameservers = item.Nameservers.SS
     }
     expectedNameservers.sort()
     targetDomainNameservers.sort()
 
-    if (expectedNameservers === targetDomainNameservers) {
+    if (
+      expectedNameservers.length == targetDomainNameservers.length &&
+      expectedNameservers.every((v, i) => v === targetDomainNameservers[i])
+    ) {
       resolve({ item })
     } else {
       reject(
