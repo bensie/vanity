@@ -47,7 +47,7 @@ const payloadObjectWithData = data => ({
 
 exports.handler = (event, context, callback) => {
   event.Records.forEach(record => {
-    if (record.eventName == 'INSERT' || record.eventName == 'UPDATE') {
+    if (record.eventName == 'INSERT' || record.eventName == 'MODIFY') {
       const params = {
         Message: JSON.stringify(
           payloadObjectWithData(record.dynamodb.NewImage)
