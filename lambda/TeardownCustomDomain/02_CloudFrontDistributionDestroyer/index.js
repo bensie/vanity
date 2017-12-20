@@ -19,7 +19,7 @@ const getItem = domainName => {
       } else if (Object.keys(data).length === 0) {
         reject(new Error('domain_name not found'))
       } else {
-        resolve({ item: data.Item, eTag })
+        resolve({ item: data.Item })
       }
     })
   })
