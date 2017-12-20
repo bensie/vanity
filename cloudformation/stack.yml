@@ -16,25 +16,6 @@ Parameters:
 
 Resources:
   ##
-  ## S3
-  ##
-  CustomDomainsS3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Join
-        - '-'
-        - - custom-domains
-          - !Select
-            - 0
-            - !Split
-              - '-'
-              - !Select
-                - 2
-                - !Split
-                  - /
-                  - !Ref AWS::StackId
-
-  ##
   ## DynamoDB
   ##
   CustomDomainsTable:
@@ -84,7 +65,7 @@ Resources:
       Timeout: 5
       MemorySize: 512
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/api-gateway/HandleCustomDomainsCreateFunction.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -103,7 +84,7 @@ Resources:
       Timeout: 5
       MemorySize: 512
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/api-gateway/HandleCustomDomainsShowFunction.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -121,7 +102,7 @@ Resources:
       Timeout: 5
       MemorySize: 512
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/api-gateway/HandleCustomDomainsDestroyFunction.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -139,7 +120,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/SetupCustomDomain/1_DNSHostedZoneCreator.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -147,7 +128,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   SetupDNSZoneVerifierFunction:
@@ -159,7 +139,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/SetupCustomDomain/2_DNSHostedZoneVerifier.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -167,7 +147,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   SetupSESDomainCreatorFunction:
@@ -179,7 +158,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/SetupCustomDomain/3_SESDomainCreator.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -187,7 +166,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   SetupSESDomainVerifierFunction:
@@ -199,7 +177,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/SetupCustomDomain/4_SESDomainVerifier.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -207,7 +185,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   SetupACMCertificateCreatorFunction:
@@ -219,7 +196,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/SetupCustomDomain/5_ACMCertificateCreator.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -227,7 +204,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   SetupACMCertificateVerifierFunction:
@@ -239,7 +215,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/SetupCustomDomain/6_ACMCertificateVerifier.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -247,7 +223,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   SetupCloudFrontDistributionCreatorFunction:
@@ -259,7 +234,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 20
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/SetupCustomDomain/7_CloudFrontDistributionCreator.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -267,7 +242,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   SetupCloudFrontDistributionDNSRecordCreatorFunction:
@@ -279,7 +253,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/SetupCustomDomain/8_CloudFrontDistributionDNSRecordCreator.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -287,7 +261,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   SetupCloudFrontDistributionVerifierFunction:
@@ -299,7 +272,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/SetupCustomDomain/9_CloudFrontDistributionVerifier.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -307,7 +280,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   SetupSuccessHandlerFunction:
@@ -319,7 +291,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/SetupCustomDomain/10_SuccessHandler.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -327,7 +299,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   SetupCatchAllNonRecoverableFailureHandlerFunction:
@@ -339,7 +310,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/SetupCustomDomain/00_CatchAllNonRecoverableFailureHandler.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -347,7 +318,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
   TeardownCloudFrontDistributionDisablerFunction:
@@ -359,7 +329,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/TeardownCustomDomain/01_CloudFrontDistributionDisabler.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -376,7 +346,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/TeardownCustomDomain/02_CloudFrontDistributionDestroyer.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -393,7 +363,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/TeardownCustomDomain/03_SESDomainDestroyer.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -410,7 +380,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/TeardownCustomDomain/04_ACMCertificateDestroyer.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -427,7 +397,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/TeardownCustomDomain/05_DNSHostedZoneDestroyer.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -444,7 +414,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/lambda/TeardownCustomDomain/06_SuccessHandler.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
@@ -461,7 +431,7 @@ Resources:
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        S3Bucket: aws-custom-domains
+        S3Bucket: vanity-custom-domains
         S3Key: !Sub
           - ${Version}/dynamodb/StreamToSNSTrigger.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }

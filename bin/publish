@@ -2,7 +2,7 @@
 
 ./bin/build
 
-bucket=aws-custom-domains
+bucket=vanity-custom-domains
 
 version=$(<VERSION)
 version=${version// /}
