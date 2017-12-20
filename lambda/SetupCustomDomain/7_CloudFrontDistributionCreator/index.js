@@ -67,10 +67,6 @@ const createDistribution = ({ item }) => {
             QueryString: true,
             Cookies: {
               Forward: 'all'
-            },
-            Headers: {
-              Quantity: 1,
-              Items: ['*']
             }
           },
           TrustedSigners: {
