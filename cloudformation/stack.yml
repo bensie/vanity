@@ -95,7 +95,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-          STATE_MACHINE_ARN: !Ref StateMachine
+          STATE_MACHINE_ARN: !Ref SetupStateMachine
   HandleCustomDomainsShowFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -117,7 +117,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-          STATE_MACHINE_ARN: !Ref StateMachine
+          STATE_MACHINE_ARN: !Ref SetupStateMachine
   HandleCustomDomainsDestroyFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -143,8 +143,8 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-          STATE_MACHINE_ARN: !Ref StateMachine
-  DNSZoneCreatorFunction:
+          STATE_MACHINE_ARN: !Ref SetupStateMachine
+  SetupDNSZoneCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
       Description: Custom domains setup hosted zone creator
@@ -164,7 +164,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-  DNSZoneVerifierFunction:
+  SetupDNSZoneVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
       Description: Custom domains setup hosted zone verifier
@@ -184,7 +184,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-  SESDomainCreatorFunction:
+  SetupSESDomainCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
       Description: Custom domains setup SES domain creator
@@ -204,7 +204,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-  SESDomainVerifierFunction:
+  SetupSESDomainVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
       Description: Custom domains setup SES domain verifier
@@ -224,7 +224,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-  ACMCertificateCreatorFunction:
+  SetupACMCertificateCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
       Description: Custom domains setup ACM certificate creator
@@ -244,7 +244,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-  ACMCertificateVerifierFunction:
+  SetupACMCertificateVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
       Description: Custom domains setup ACM certificate verifier
@@ -264,7 +264,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-  CloudFrontDistributionCreatorFunction:
+  SetupCloudFrontDistributionCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
       Description: Custom domains setup CloudFront distribution creator
@@ -284,7 +284,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-  CloudFrontDistributionDNSRecordCreatorFunction:
+  SetupCloudFrontDistributionDNSRecordCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
       Description: Custom domains setup CloudFront distribution DNS record creator
@@ -304,7 +304,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-  CloudFrontDistributionVerifierFunction:
+  SetupCloudFrontDistributionVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
       Description: Custom domains setup CloudFront distribution verifier
@@ -324,7 +324,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-  SuccessHandlerFunction:
+  SetupSuccessHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
       Description: Custom domains setup final success function
@@ -344,7 +344,7 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-  CatchAllNonRecoverableFailureHandlerFunction:
+  SetupCatchAllNonRecoverableFailureHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
       Description: Custom domains setup catch all non-recoverable failure function
@@ -364,6 +364,108 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
+  TeardownCloudFrontDistributionDestroyerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains teardown distribution destroyer
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Timeout: 10
+      Code:
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/TeardownCustomDomain/01_CloudFrontDistributionDestroyer.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+  TeardownCloudFrontDistributionDestroyVerifierFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains teardown distribution destroy verifier
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Timeout: 10
+      Code:
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/TeardownCustomDomain/02_CloudFrontDistributionDestroyVerifier.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+  TeardownSESDomainDestroyerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains teardown SES domain destroyer
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Timeout: 10
+      Code:
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/TeardownCustomDomain/03_SESDomainDestroyer.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+  TeardownACMCertificateDestroyerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains teardown certificate destroyer
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Timeout: 10
+      Code:
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/TeardownCustomDomain/04_ACMCertificateDestroyer.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+  TeardownDNSHostedZoneDestroyerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains teardown DNS hosted zone destroyer
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Timeout: 10
+      Code:
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/TeardownCustomDomain/05_DNSHostedZoneDestroyer.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+  TeardownSuccessHandlerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains teardown success handler
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Timeout: 10
+      Code:
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/TeardownCustomDomain/06_SuccessHandler.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
   StreamToSNSTriggerFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -527,11 +629,12 @@ Resources:
         - { Api: !Ref ApiGateway }
 
   ##
-  ## Step Function State Machine
+  ## Step Function State Machines
   ##
-  StateMachine:
+  SetupStateMachine:
     Type: AWS::StepFunctions::StateMachine
     Properties:
+      RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/StatesExecutionRole-us-east-1
       DefinitionString: !Sub |-
         {
           "Comment": "Setup a custom domain",
@@ -539,7 +642,7 @@ Resources:
           "States": {
             "1_DNSZoneCreator": {
               "Type": "Task",
-              "Resource": "${DNSZoneCreatorFunction.Arn}",
+              "Resource": "${SetupDNSZoneCreatorFunction.Arn}",
               "Next": "2_DNSZoneVerifier",
               "Retry": [
                 {
@@ -558,7 +661,7 @@ Resources:
             },
             "2_DNSZoneVerifier": {
               "Type": "Task",
-              "Resource": "${DNSZoneVerifierFunction.Arn}",
+              "Resource": "${SetupDNSZoneVerifierFunction.Arn}",
               "Next": "3_SESDomainCreator",
               "Retry": [
                 {
@@ -577,7 +680,7 @@ Resources:
             },
             "3_SESDomainCreator": {
               "Type": "Task",
-              "Resource": "${SESDomainCreatorFunction.Arn}",
+              "Resource": "${SetupSESDomainCreatorFunction.Arn}",
               "Next": "4_SESDomainVerifier",
               "Retry": [
                 {
@@ -596,7 +699,7 @@ Resources:
             },
             "4_SESDomainVerifier": {
               "Type": "Task",
-              "Resource": "${SESDomainVerifierFunction.Arn}",
+              "Resource": "${SetupSESDomainVerifierFunction.Arn}",
               "Next": "5_ACMCertificateCreator",
               "Retry": [
                 {
@@ -615,7 +718,7 @@ Resources:
             },
             "5_ACMCertificateCreator": {
               "Type": "Task",
-              "Resource": "${ACMCertificateCreatorFunction.Arn}",
+              "Resource": "${SetupACMCertificateCreatorFunction.Arn}",
               "Next": "6_ACMCertificateVerifier",
               "Retry": [
                 {
@@ -634,7 +737,7 @@ Resources:
             },
             "6_ACMCertificateVerifier": {
               "Type": "Task",
-              "Resource": "${ACMCertificateVerifierFunction.Arn}",
+              "Resource": "${SetupACMCertificateVerifierFunction.Arn}",
               "Next": "7_CloudFrontDistributionCreator",
               "Retry": [
                 {
@@ -653,7 +756,7 @@ Resources:
             },
             "7_CloudFrontDistributionCreator": {
               "Type": "Task",
-              "Resource": "${CloudFrontDistributionCreatorFunction.Arn}",
+              "Resource": "${SetupCloudFrontDistributionCreatorFunction.Arn}",
               "Next": "8_CloudFrontDistributionDNSRecordCreator",
               "Retry": [
                 {
@@ -672,7 +775,7 @@ Resources:
             },
             "8_CloudFrontDistributionDNSRecordCreator": {
               "Type": "Task",
-              "Resource": "${CloudFrontDistributionDNSRecordCreatorFunction.Arn}",
+              "Resource": "${SetupCloudFrontDistributionDNSRecordCreatorFunction.Arn}",
               "Next": "9_CloudFrontDistributionVerifier",
               "Retry": [
                 {
@@ -691,7 +794,7 @@ Resources:
             },
             "9_CloudFrontDistributionVerifier": {
               "Type": "Task",
-              "Resource": "${CloudFrontDistributionVerifierFunction.Arn}",
+              "Resource": "${SetupCloudFrontDistributionVerifierFunction.Arn}",
               "Next": "10_SuccessHandler",
               "Retry": [
                 {
@@ -710,7 +813,7 @@ Resources:
             },
             "10_SuccessHandler": {
               "Type": "Task",
-              "Resource": "${SuccessHandlerFunction.Arn}",
+              "Resource": "${SetupSuccessHandlerFunction.Arn}",
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
@@ -729,7 +832,7 @@ Resources:
             },
             "00_CatchAllNonRecoverableFailureHandler": {
               "Type": "Task",
-              "Resource": "${CatchAllNonRecoverableFailureHandlerFunction.Arn}",
+              "Resource": "${SetupCatchAllNonRecoverableFailureHandlerFunction.Arn}",
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
@@ -742,8 +845,96 @@ Resources:
             }
           }
         }
-
+  TeardownStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
       RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/StatesExecutionRole-us-east-1
+      DefinitionString: !Sub |-
+        {
+          "Comment": "Teardown a custom domain",
+          "StartAt": "01_CloudFrontDistributionDestroyer",
+          "States": {
+            "01_CloudFrontDistributionDestroyer": {
+              "Type": "Task",
+              "Resource": "${TeardownCloudFrontDistributionDestroyerFunction.Arn}",
+              "Next": "02_CloudFrontDistributionDestroyVerifier",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ]
+            },
+            "02_CloudFrontDistributionDestroyVerifier": {
+              "Type": "Task",
+              "Resource":
+                "${TeardownCloudFrontDistributionDestroyVerifierFunction.Arn}",
+              "Next": "03_SESDomainDestroyer",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 30,
+                  "MaxAttempts": 480,
+                  "BackoffRate": 1.0
+                }
+              ]
+            },
+            "03_SESDomainDestroyer": {
+              "Type": "Task",
+              "Resource": "${TeardownSESDomainDestroyerFunction.Arn}",
+              "Next": "04_ACMCertificateDestroyer",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ]
+            },
+            "04_ACMCertificateDestroyer": {
+              "Type": "Task",
+              "Resource": "${TeardownACMCertificateDestroyerFunction.Arn}",
+              "Next": "05_DNSHostedZoneDestroyer",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ]
+            },
+            "05_DNSHostedZoneDestroyer": {
+              "Type": "Task",
+              "Resource": "${TeardownDNSHostedZoneDestroyerFunction.Arn}",
+              "Next": "06_SuccessHandler",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ]
+            },
+            "06_SuccessHandler": {
+              "Type": "Task",
+              "Resource": "${TeardownSuccessHandlerFunction.Arn}",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ],
+              "End": true
+            }
+          }
+        }
 
   ##
   ## Permissions
@@ -851,7 +1042,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - states:StartExecution
-                Resource: "*" # !Ref StateMachine causes circular dep
+                Resource: "*" # !Ref SetupStateMachine causes circular dep
         - PolicyName: custom-domains-sns-access
           PolicyDocument:
             Version: "2012-10-17"

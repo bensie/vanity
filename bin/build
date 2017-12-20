@@ -6,6 +6,7 @@ version=${version// /}
 if [ -d build ]; then rm -rf build; fi
 mkdir -p build/api-gateway
 mkdir -p build/lambda/SetupCustomDomain
+mkdir -p build/lambda/TeardownCustomDomain
 mkdir -p build/dynamodb
 mkdir -p build/cloudformation
 
@@ -28,6 +29,15 @@ pushd lambda
         rm -rf node_modules
         yarn install
         zip -r $pwd/build/lambda/SetupCustomDomain/${lambdafunction%?}.zip .
+      popd
+    done
+  popd
+  pushd TeardownCustomDomain
+    for lambdafunction in */; do
+      pushd $lambdafunction
+        rm -rf node_modules
+        yarn install
+        zip -r $pwd/build/lambda/TeardownCustomDomain/${lambdafunction%?}.zip .
       popd
     done
   popd

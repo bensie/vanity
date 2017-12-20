@@ -20,6 +20,11 @@ pushd build
         aws s3 cp $zip s3://$bucket/$version/lambda/SetupCustomDomain/$zip --acl public-read
       done
     popd
+    pushd TeardownCustomDomain
+      for zip in *.zip; do
+        aws s3 cp $zip s3://$bucket/$version/lambda/TeardownCustomDomain/$zip --acl public-read
+      done
+    popd
   popd
 
   pushd dynamodb
