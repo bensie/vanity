@@ -73,6 +73,14 @@ exports.handler = (event, context, callback) => {
           body: JSON.stringify({ message: 'domain_name not found' })
         }
         callback(null, response)
+      } else if (data.Item.DeleteStartedAt) {
+        const response = {
+          statusCode: 400,
+          body: JSON.stringify({
+            message: 'Delete operation is already in progress'
+          })
+        }
+        callback(null, response)
       } else {
         const deleteStartedAt = Date.now()
         const updateItemParams = {
@@ -117,10 +125,8 @@ exports.handler = (event, context, callback) => {
                 callback(null, response)
               } else {
                 const response = {
-                  statusCode: 200,
-                  body: JSON.stringify(
-                    payloadObjectWithData({ ...dynamoItem, delete_started_at })
-                  )
+                  statusCode: 204,
+                  body: ''
                 }
                 callback(null, response)
               }
@@ -131,4 +137,3 @@ exports.handler = (event, context, callback) => {
     }
   })
 }
-

@@ -92,9 +92,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
-          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
-          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
           STATE_MACHINE_ARN: !Ref SetupStateMachine
   HandleCustomDomainsShowFunction:
     Type: AWS::Lambda::Function
@@ -114,10 +111,6 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
-          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
-          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-          STATE_MACHINE_ARN: !Ref SetupStateMachine
   HandleCustomDomainsDestroyFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -128,22 +121,15 @@ Resources:
       Timeout: 5
       MemorySize: 512
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            var response = {
-              statusCode: 200,
-              body: JSON.stringify({ custom_domains_destroy: true })
-            }
-            callback(null, response)
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/api-gateway/HandleCustomDomainsDestroyFunction.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref CustomDomainsTable
-          BUCKET_NAME: !Ref CustomDomainsS3Bucket
-          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
-          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-          STATE_MACHINE_ARN: !Ref SetupStateMachine
+          STATE_MACHINE_ARN: !Ref TeardownStateMachine
   SetupDNSZoneCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -976,6 +962,7 @@ Resources:
                   - route53:GetHostedZone
                   - route53:ListHostedZones
                   - route53:DeleteHostedZone
+                  - route53:ListResourceRecordSets
                   - route53:ChangeResourceRecordSets
                 Resource: "*"
         - PolicyName: custom-domains-cloudfront-access
@@ -988,6 +975,7 @@ Resources:
                   - cloudfront:UpdateDistribution
                   - cloudfront:DeleteDistribution
                   - cloudfront:GetDistribution
+                  - cloudfront:GetDistributionConfig
                 Resource: "*"
         - PolicyName: custom-domains-certificate-manager-access
           PolicyDocument:
@@ -1034,6 +1022,7 @@ Resources:
                   - ses:GetIdentityVerificationAttributes
                   - ses:GetIdentityDkimAttributes
                   - ses:SetIdentityDkimEnabled
+                  - ses:DeleteIdentity
                 Resource: "*"
         - PolicyName: custom-domains-stepfunctions-access
           PolicyDocument:

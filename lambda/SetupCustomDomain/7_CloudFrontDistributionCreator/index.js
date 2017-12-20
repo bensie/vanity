@@ -91,7 +91,6 @@ const createDistribution = ({ item }) => {
         Comment: '',
         Enabled: true,
         ViewerCertificate: {
-          CloudFrontDefaultCertificate: false,
           ACMCertificateArn: item.ACMCertificateArn.S,
           SSLSupportMethod: 'sni-only',
           MinimumProtocolVersion: 'TLSv1_2016'

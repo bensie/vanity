@@ -25,10 +25,50 @@ const getItem = domainName => {
   })
 }
 
-const deleteDistribution = ({ item }) => {
+const getDistributionConfig = ({ item }) => {
   return new Promise((resolve, reject) => {
     const params = {
       Id: item.CloudFrontDistributionID.S
+    }
+
+    cloudfront.getDistributionConfig(params, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve({
+          item,
+          distributionConfig: data.DistributionConfig,
+          eTag: data.ETag
+        })
+      }
+    })
+  })
+}
+
+const disableDistribution = ({ item, distributionConfig, eTag }) => {
+  return new Promise((resolve, reject) => {
+    distributionConfig.Enabled = false
+    const params = {
+      Id: item.CloudFrontDistributionID.S,
+      DistributionConfig: distributionConfig,
+      IfMatch: eTag
+    }
+
+    cloudfront.updateDistribution(params, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve({ item, eTag: data.ETag })
+      }
+    })
+  })
+}
+
+const deleteDistribution = ({ item, eTag }) => {
+  return new Promise((resolve, reject) => {
+    const params = {
+      Id: item.CloudFrontDistributionID.S,
+      IfMatch: eTag
     }
 
     cloudfront.deleteDistribution(params, (err, _data) => {
@@ -50,6 +90,8 @@ exports.handler = (event, _context, callback) => {
   }
 
   getItem(domainName)
+    .then(getDistributionConfig)
+    .then(disableDistribution)
     .then(deleteDistribution)
     .then(() => success())
     .catch(error => failure(error))
