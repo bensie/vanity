@@ -28,6 +28,16 @@ The following AWS services are used:
 * SNS
 * Step Functions
 
+## What does it do?
+
+For each domain you create, Vanity will do the following:
+
+1. Create a Route 53 hosted zone for the domain. You or your customer must delegate DNS for the specified domain to the provided name servers by adding NS records. **Adding these NS records is the only step that must be done outside Vanity**. Note: there is no free tier for Route 53 so you will be [charged for hosted zones accordingly](https://aws.amazon.com/route53/pricing/).
+1. Await the addition of these NS records. Vanity will check for these records every 30 seconds for 36 hours after which point the create operation will be marked as failed.
+1. Create a domain identity in Simple Email Service (SES) and verify it for sending with DKIM using DNS verification.
+1. Create a TLS certificate with Certificate Manager (ACM) and verify it with DNS.
+1. Create a CloudFront distribution using the requested domain as the alias, apply the verified certificate to serve over HTTPS, and point it at the specified origin domain name (your existing application).
+
 ## Installation
 
 Click the "Launch Stack" to bootstrap everything you need in the us-east-1 (N. Virginia) region. There is no step 2.
