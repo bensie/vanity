@@ -41,6 +41,12 @@ const payloadObjectWithData = data => ({
   cloudfront_distribution_domain_name: data.CloudFrontDistributionDomainName
     ? data.CloudFrontDistributionDomainName.S
     : null,
+  cloudfront_distribution_authenticity_header_name: data.CloudFrontDistributionAuthenticityHeaderName
+    ? data.CloudFrontDistributionAuthenticityHeaderName.S
+    : null,
+  cloudfront_distribution_authenticity_header_value: data.CloudFrontDistributionAuthenticityHeaderValue
+    ? data.CloudFrontDistributionAuthenticityHeaderValue.S
+    : null,
   cloudfront_distribution_verified_at: data.CloudFrontDistributionVerifiedAt
     ? data.CloudFrontDistributionVerifiedAt.N
     : null

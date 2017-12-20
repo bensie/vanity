@@ -2,6 +2,7 @@ const AWS = require('aws-sdk')
 AWS.config.update({ region: process.env.AWS_REGION })
 const dynamodb = new AWS.DynamoDB()
 const cloudfront = new AWS.CloudFront()
+const uuidv4 = require('uuid/v4')
 
 class SkipToEndWithSuccessError extends Error {}
 
@@ -33,6 +34,10 @@ const getItem = domainName => {
 
 const createDistribution = ({ item }) => {
   return new Promise((resolve, reject) => {
+    const authenticityHeader = {
+      HeaderName: 'X-Domain-Authenticity-Token',
+      HeaderValue: uuidv4()
+    }
     const params = {
       DistributionConfig: {
         CallerReference: idempotencyToken(
@@ -49,6 +54,10 @@ const createDistribution = ({ item }) => {
             {
               Id: `custom-origin-${item.DomainName.S}`,
               DomainName: item.OriginDomainName.S,
+              CustomHeaders: {
+                Quantity: 1,
+                Items: [authenticityHeader]
+              },
               CustomOriginConfig: {
                 HTTPPort: 80,
                 HTTPSPort: 443,
@@ -102,13 +111,13 @@ const createDistribution = ({ item }) => {
       if (err) {
         reject(err)
       } else {
-        resolve({ item, distribution: data })
+        resolve({ item, distribution: data, authenticityHeader })
       }
     })
   })
 }
 
-const getUpdateItemParams = ({ item, distribution }) => {
+const getUpdateItemParams = ({ item, distribution, authenticityHeader }) => {
   return new Promise(resolve => {
     const updateItemParams = {
       TableName: process.env.DYNAMODB_TABLE,
@@ -118,13 +127,19 @@ const getUpdateItemParams = ({ item, distribution }) => {
         }
       },
       UpdateExpression:
-        'SET CloudFrontDistributionID=:CloudFrontDistributionID, CloudFrontDistributionDomainName=:CloudFrontDistributionDomainName',
+        'SET CloudFrontDistributionID=:CloudFrontDistributionID, CloudFrontDistributionDomainName=:CloudFrontDistributionDomainName, CloudFrontDistributionAuthenticityHeaderName=:CloudFrontDistributionAuthenticityHeaderName, CloudFrontDistributionAuthenticityHeaderValue=:CloudFrontDistributionAuthenticityHeaderValue',
       ExpressionAttributeValues: {
         ':CloudFrontDistributionID': {
           S: distribution.Distribution.Id
         },
         ':CloudFrontDistributionDomainName': {
           S: distribution.Distribution.DomainName
+        },
+        ':CloudFrontDistributionAuthenticityHeaderName': {
+          S: authenticityHeader.HeaderName
+        },
+        ':CloudFrontDistributionAuthenticityHeaderValue': {
+          S: authenticityHeader.HeaderValue
         }
       }
     }
