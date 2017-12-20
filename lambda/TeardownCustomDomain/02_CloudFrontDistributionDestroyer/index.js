@@ -36,7 +36,7 @@ const deleteDistribution = ({ item, eTag }) => {
       if (err) {
         reject(err)
       } else {
-        resolve()
+        resolve({ item })
       }
     })
   })
