@@ -19,30 +19,24 @@ const getItem = domainName => {
       } else if (Object.keys(data).length === 0) {
         reject(new Error('domain_name not found'))
       } else {
-        resolve({ item: data.Item })
+        resolve({ item: data.Item, eTag })
       }
     })
   })
 }
 
-const verifyDistributionDeleted = ({ item }) => {
+const deleteDistribution = ({ item, eTag }) => {
   return new Promise((resolve, reject) => {
     const params = {
-      Id: item.CloudFrontDistributionID.S
+      Id: item.CloudFrontDistributionID.S,
+      IfMatch: eTag
     }
 
-    cloudfront.getDistribution(params, (err, data) => {
+    cloudfront.deleteDistribution(params, (err, _data) => {
       if (err) {
-        // Resolve on error because we are confirming that it's gone and expect
-        // an error
-        resolve({ item })
+        reject(err)
       } else {
-        const status = data.Distribution.Status
-        reject(
-          new Error(
-            `CloudFront distribution still exists with status ${status}`
-          )
-        )
+        resolve()
       }
     })
   })
@@ -77,7 +71,7 @@ const updateItem = ({ item, updateItemParams }) => {
 }
 
 exports.handler = (event, _context, callback) => {
-  const { domainName } = event
+  const { domainName, eTag } = event
   const success = () => callback(null, { domainName })
   const failure = err => {
     err.domainName = domainName
@@ -85,7 +79,7 @@ exports.handler = (event, _context, callback) => {
   }
 
   getItem(domainName)
-    .then(verifyDistributionDeleted)
+    .then(({ item }) => deleteDistribution({ item, eTag }))
     .then(getUpdateItemParams)
     .then(updateItem)
     .then(() => success())

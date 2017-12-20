@@ -64,26 +64,8 @@ const disableDistribution = ({ item, distributionConfig, eTag }) => {
   })
 }
 
-const deleteDistribution = ({ item, eTag }) => {
-  return new Promise((resolve, reject) => {
-    const params = {
-      Id: item.CloudFrontDistributionID.S,
-      IfMatch: eTag
-    }
-
-    cloudfront.deleteDistribution(params, (err, _data) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve()
-      }
-    })
-  })
-}
-
 exports.handler = (event, _context, callback) => {
   const { domainName } = event
-  const success = () => callback(null, { domainName })
   const failure = err => {
     err.domainName = domainName
     callback(err)
@@ -92,7 +74,6 @@ exports.handler = (event, _context, callback) => {
   getItem(domainName)
     .then(getDistributionConfig)
     .then(disableDistribution)
-    .then(deleteDistribution)
-    .then(() => success())
+    .then(({ eTag }) => callback(null, { domainName, eTag }))
     .catch(error => failure(error))
 }

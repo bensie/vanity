@@ -350,6 +350,23 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
+  TeardownCloudFrontDistributionDisablerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains teardown distribution disabler
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Timeout: 10
+      Code:
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/TeardownCustomDomain/01_CloudFrontDistributionDisabler.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
   TeardownCloudFrontDistributionDestroyerFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -361,24 +378,7 @@ Resources:
       Code:
         S3Bucket: aws-custom-domains
         S3Key: !Sub
-          - ${Version}/lambda/TeardownCustomDomain/01_CloudFrontDistributionDestroyer.zip
-          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
-      Environment:
-        Variables:
-          REGION: !Ref AWS::Region
-          DYNAMODB_TABLE: !Ref CustomDomainsTable
-  TeardownCloudFrontDistributionDestroyVerifierFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      Description: Custom domains teardown distribution destroy verifier
-      Handler: index.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: nodejs6.10
-      Timeout: 10
-      Code:
-        S3Bucket: aws-custom-domains
-        S3Key: !Sub
-          - ${Version}/lambda/TeardownCustomDomain/02_CloudFrontDistributionDestroyVerifier.zip
+          - ${Version}/lambda/TeardownCustomDomain/02_CloudFrontDistributionDestroyer.zip
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
@@ -838,12 +838,12 @@ Resources:
       DefinitionString: !Sub |-
         {
           "Comment": "Teardown a custom domain",
-          "StartAt": "01_CloudFrontDistributionDestroyer",
+          "StartAt": "01_CloudFrontDistributionDisabler",
           "States": {
-            "01_CloudFrontDistributionDestroyer": {
+            "01_CloudFrontDistributionDisabler": {
               "Type": "Task",
-              "Resource": "${TeardownCloudFrontDistributionDestroyerFunction.Arn}",
-              "Next": "02_CloudFrontDistributionDestroyVerifier",
+              "Resource": "${TeardownCloudFrontDistributionDisablerFunction.Arn}",
+              "Next": "02_CloudFrontDistributionDestroyer",
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
@@ -853,10 +853,9 @@ Resources:
                 }
               ]
             },
-            "02_CloudFrontDistributionDestroyVerifier": {
+            "02_CloudFrontDistributionDestroyer": {
               "Type": "Task",
-              "Resource":
-                "${TeardownCloudFrontDistributionDestroyVerifierFunction.Arn}",
+              "Resource": "${TeardownCloudFrontDistributionDestroyerFunction.Arn}",
               "Next": "03_SESDomainDestroyer",
               "Retry": [
                 {
