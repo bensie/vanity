@@ -107,7 +107,10 @@ const updateItem = ({ item, updateItemParams }) => {
 exports.handler = (event, _context, callback) => {
   const { domainName } = event
   const success = () => callback(null, { domainName })
-  const failure = err => callback(err)
+  const failure = err => {
+    err.domainName = domainName
+    callback(err)
+  }
 
   getItem(domainName)
     .then(getCreateZoneParams)

@@ -1,9 +1,6 @@
 const AWS = require('aws-sdk')
 AWS.config.update({ region: process.env.AWS_REGION })
 const dynamodb = new AWS.DynamoDB()
-const cloudfront = new AWS.CloudFront()
-
-class SkipToEndWithSuccessError extends Error {}
 
 const getItem = domainName => {
   return new Promise((resolve, reject) => {
@@ -27,28 +24,7 @@ const getItem = domainName => {
   })
 }
 
-const verifyDistribution = ({ item }) => {
-  return new Promise((resolve, reject) => {
-    const params = {
-      Id: item.CloudFrontDistributionID.S
-    }
-
-    cloudfront.getDistribution(params, (err, data) => {
-      if (err) {
-        reject(err)
-      } else {
-        const status = data.Distribution.Status
-        if (status === 'Deployed') {
-          resolve({ item, distribution: data })
-        } else {
-          reject(new Error(`CloudFront distribution status is ${status}`))
-        }
-      }
-    })
-  })
-}
-
-const getUpdateItemParams = ({ item, distribution }) => {
+const getUpdateItemParams = ({ item }) => {
   return new Promise(resolve => {
     const updateItemParams = {
       TableName: process.env.DYNAMODB_TABLE,
@@ -58,9 +34,9 @@ const getUpdateItemParams = ({ item, distribution }) => {
         }
       },
       UpdateExpression:
-        'SET CloudFrontDistributionVerifiedAt=:CloudFrontDistributionVerifiedAt',
+        'SET SetupVerificationFailedAt=:SetupVerificationFailedAt',
       ExpressionAttributeValues: {
-        ':CloudFrontDistributionVerifiedAt': {
+        ':SetupVerificationFailedAt': {
           N: `${Date.now()}`
         }
       }
@@ -90,15 +66,8 @@ exports.handler = (event, _context, callback) => {
   }
 
   getItem(domainName)
-    .then(verifyDistribution)
     .then(getUpdateItemParams)
     .then(updateItem)
     .then(() => success())
-    .catch(error => {
-      if (error instanceof SkipToEndWithSuccessError) {
-        success()
-      } else {
-        failure(error)
-      }
-    })
+    .catch(error => failure(error))
 }

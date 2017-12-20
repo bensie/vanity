@@ -147,7 +147,7 @@ Resources:
   DNSZoneCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Custom domains hosted zone creator
+      Description: Custom domains setup hosted zone creator
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
@@ -167,7 +167,7 @@ Resources:
   DNSZoneVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Custom domains hosted zone verifier
+      Description: Custom domains setup hosted zone verifier
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
@@ -187,7 +187,7 @@ Resources:
   SESDomainCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Custom domains SES domain creator
+      Description: Custom domains setup SES domain creator
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
@@ -207,7 +207,7 @@ Resources:
   SESDomainVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Custom domains SES domain verifier
+      Description: Custom domains setup SES domain verifier
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
@@ -227,7 +227,7 @@ Resources:
   ACMCertificateCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Custom domains ACM certificate creator
+      Description: Custom domains setup ACM certificate creator
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
@@ -247,7 +247,7 @@ Resources:
   ACMCertificateVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Custom domains ACM certificate verifier
+      Description: Custom domains setup ACM certificate verifier
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
@@ -267,7 +267,7 @@ Resources:
   CloudFrontDistributionCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Custom domains CloudFront distribution creator
+      Description: Custom domains setup CloudFront distribution creator
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
@@ -287,7 +287,7 @@ Resources:
   CloudFrontDistributionDNSRecordCreatorFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Custom domains CloudFront distribution DNS record creator
+      Description: Custom domains setup CloudFront distribution DNS record creator
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
@@ -307,7 +307,7 @@ Resources:
   CloudFrontDistributionVerifierFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Custom domains CloudFront distribution verifier
+      Description: Custom domains setup CloudFront distribution verifier
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
@@ -324,20 +324,39 @@ Resources:
           BUCKET_NAME: !Ref CustomDomainsS3Bucket
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
-  CatchAllNonRecoverableFailureFunction:
+  SuccessHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Custom domains catch all non-recoverable failure function
+      Description: Custom domains setup final success function
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs6.10
       Timeout: 10
       Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            const { domainName } = event
-            callback(null, { domainName })
-          }
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/SetupCustomDomain/10_SuccessHandler.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          DYNAMODB_TABLE: !Ref CustomDomainsTable
+          BUCKET_NAME: !Ref CustomDomainsS3Bucket
+          EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
+          REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
+  CatchAllNonRecoverableFailureHandlerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Custom domains setup catch all non-recoverable failure function
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs6.10
+      Timeout: 10
+      Code:
+        S3Bucket: aws-custom-domains
+        S3Key: !Sub
+          - ${Version}/lambda/SetupCustomDomain/00_CatchAllNonRecoverableFailureHandler.zip
+          - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
           REGION: !Ref AWS::Region
@@ -533,7 +552,7 @@ Resources:
               "Catch": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "Next": "CatchAllNonRecoverableFailure"
+                  "Next": "00_CatchAllNonRecoverableFailureHandler"
                 }
               ]
             },
@@ -552,7 +571,7 @@ Resources:
               "Catch": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "Next": "CatchAllNonRecoverableFailure"
+                  "Next": "00_CatchAllNonRecoverableFailureHandler"
                 }
               ]
             },
@@ -571,7 +590,7 @@ Resources:
               "Catch": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "Next": "CatchAllNonRecoverableFailure"
+                  "Next": "00_CatchAllNonRecoverableFailureHandler"
                 }
               ]
             },
@@ -590,7 +609,7 @@ Resources:
               "Catch": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "Next": "CatchAllNonRecoverableFailure"
+                  "Next": "00_CatchAllNonRecoverableFailureHandler"
                 }
               ]
             },
@@ -609,7 +628,7 @@ Resources:
               "Catch": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "Next": "CatchAllNonRecoverableFailure"
+                  "Next": "00_CatchAllNonRecoverableFailureHandler"
                 }
               ]
             },
@@ -628,7 +647,7 @@ Resources:
               "Catch": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "Next": "CatchAllNonRecoverableFailure"
+                  "Next": "00_CatchAllNonRecoverableFailureHandler"
                 }
               ]
             },
@@ -647,7 +666,7 @@ Resources:
               "Catch": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "Next": "CatchAllNonRecoverableFailure"
+                  "Next": "00_CatchAllNonRecoverableFailureHandler"
                 }
               ]
             },
@@ -666,13 +685,14 @@ Resources:
               "Catch": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "Next": "CatchAllNonRecoverableFailure"
+                  "Next": "00_CatchAllNonRecoverableFailureHandler"
                 }
               ]
             },
             "9_CloudFrontDistributionVerifier": {
               "Type": "Task",
               "Resource": "${CloudFrontDistributionVerifierFunction.Arn}",
+              "Next": "10_SuccessHandler",
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
@@ -684,14 +704,32 @@ Resources:
               "Catch": [
                 {
                   "ErrorEquals": ["States.ALL"],
-                  "Next": "CatchAllNonRecoverableFailure"
+                  "Next": "00_CatchAllNonRecoverableFailureHandler"
+                }
+              ]
+            },
+            "10_SuccessHandler": {
+              "Type": "Task",
+              "Resource": "${SuccessHandlerFunction.Arn}",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 1.0
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "00_CatchAllNonRecoverableFailureHandler"
                 }
               ],
               "End": true
             },
-            "CatchAllNonRecoverableFailure": {
+            "00_CatchAllNonRecoverableFailureHandler": {
               "Type": "Task",
-              "Resource": "${CatchAllNonRecoverableFailureFunction.Arn}",
+              "Resource": "${CatchAllNonRecoverableFailureHandlerFunction.Arn}",
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
