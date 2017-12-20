@@ -30,11 +30,11 @@ The following AWS services are used:
 
 ## Installation
 
-Click the "Launch Stack" to bootstrap everything you need in the us-east-1 (N. Virginia) region.
+Click the "Launch Stack" to bootstrap everything you need in the us-east-1 (N. Virginia) region. There is no step 2.
 
-[![Launch stack in us-east-1](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=custom-domains&templateURL=https://s3.amazonaws.com/vanity-custom-domains/v1.0.0-beta30/cloudformation/stack.yml)
+[![Launch stack in us-east-1](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=vanity-domains&templateURL=https://s3.amazonaws.com/vanity-domains/v1.0.0-beta30/cloudformation/stack.yml)
 
-After creating your CloudFormation stack, the "Outputs" section of the Stack Detail contains the API Gateway base URL (called CustomDomainsAPIURL) for your custom domain service. It looks something like `https://xxxx.execute-api.us-east-1.amazonaws.com/v1/custom_domains`
+After creating your CloudFormation stack, the "Outputs" section of the Stack Detail contains the API Gateway base URL (called CustomDomainsAPIURL) for your custom domain service. It looks something like `https://xxxx.execute-api.us-east-1.amazonaws.com/v1/domains` and you'll use it for all requests to Vanity.
 
 ## Usage
 
@@ -43,7 +43,7 @@ This service provides 3 JSON API endpoints for management of custom domains. You
 For each action, you must supply the custom domain in the path. A `POST` request to this endpoint creates a new custom domain, a `GET` request fetches info about the existing custom domain, and a `DELETE` request removes the custom domain.
 
 ```
-https://xxxx.execute-api.us-east-1.amazonaws.com/v1/custom_domains/my.customdomain.com
+https://xxxx.execute-api.us-east-1.amazonaws.com/v1/domains/my.customdomain.com
 ```
 
 ### Create a custom domain
@@ -53,7 +53,7 @@ To create a new custom domain, you must supply the `origin_domain_name` as an at
 #### Request
 
 ```
-curl -X "POST" "https://xxxx.execute-api.us-east-1.amazonaws.com/v1/custom_domains/my.customdomain.com" \
+curl -X "POST" "https://xxxx.execute-api.us-east-1.amazonaws.com/v1/domains/my.customdomain.com" \
      -H 'Content-Type: application/json; charset=utf-8' \
      -d $'{
   "origin_domain_name": "user.mycoolapp.com"

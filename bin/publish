@@ -2,7 +2,7 @@
 
 ./bin/build
 
-bucket=vanity-custom-domains
+bucket=vanity-domains
 
 version=$(<VERSION)
 version=${version// /}
