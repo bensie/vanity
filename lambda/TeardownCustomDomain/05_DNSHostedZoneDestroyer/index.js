@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk')
 AWS.config.update({ region: process.env.AWS_REGION })
 const dynamodb = new AWS.DynamoDB()
-const route53 = new AWS.SES()
+const route53 = new AWS.Route53()
 
 const getItem = domainName => {
   return new Promise((resolve, reject) => {
@@ -28,7 +28,7 @@ const getItem = domainName => {
 const listResourceRecordSets = ({ item }) => {
   return new Promise((resolve, reject) => {
     const params = {
-      HostedZoneId: item.HostedZoneId.S
+      HostedZoneId: item.Route53HostedZoneID.S
     }
     route53.listResourceRecordSets(params, (err, data) => {
       if (err) {
@@ -43,22 +43,29 @@ const listResourceRecordSets = ({ item }) => {
 const deleteResourceRecordSets = ({ item, resourceRecordSets }) => {
   return new Promise((resolve, reject) => {
     let changes = []
-    resourceRecordSets.forEach(rrs => {
+    resourceRecordSets.ResourceRecordSets.forEach(rrs => {
       if (rrs.Type === 'SOA' || rrs.Type === 'NS') {
         return
       }
+
+      // Route53 is stupid and the output of listResourceRecordSets is not
+      // valid input for ALIAS records because it sends an empty ResourceRecords
+      // array.
+      if (rrs.AliasTarget) {
+        delete rrs.ResourceRecords
+      }
+
       changes.push({
         Action: 'DELETE',
-        ResourceRecordSet: {
-          Name: rrs.Name,
-          Type: rrs.Type
-        }
+        ResourceRecordSet: rrs
       })
     })
 
     const params = {
-      ChangeBatch: changes,
-      HostedZoneId: item.HostedZoneId.S
+      ChangeBatch: {
+        Changes: changes
+      },
+      HostedZoneId: item.Route53HostedZoneID.S
     }
 
     route53.changeResourceRecordSets(params, (err, data) => {
@@ -74,7 +81,7 @@ const deleteResourceRecordSets = ({ item, resourceRecordSets }) => {
 const deleteHostedZone = ({ item }) => {
   return new Promise((resolve, reject) => {
     const params = {
-      Id: item.HostedZoneId.S
+      Id: item.Route53HostedZoneID.S
     }
 
     route53.deleteHostedZone(params, (err, _data) => {
