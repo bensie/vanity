@@ -42,7 +42,7 @@ For each domain you create, Vanity will do the following:
 
 Click the "Launch Stack" to bootstrap everything you need in the us-east-1 (N. Virginia) region. There is no step 2.
 
-[![Launch stack in us-east-1](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=vanity-domains&templateURL=https://s3.amazonaws.com/vanity-domains/v1.0.0-beta31/cloudformation/stack.yml)
+[![Launch stack in us-east-1](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=vanity-domains&templateURL=https://s3.amazonaws.com/vanity-domains/v1.0.0-beta32/cloudformation/stack.yml)
 
 After creating your CloudFormation stack, the "Outputs" section of the Stack Detail contains the API Gateway base URL (called CustomDomainsAPIURL) for your custom domain service. It looks something like `https://xxxx.execute-api.us-east-1.amazonaws.com/v1/domains` and you'll use it for all requests to Vanity.
 
