@@ -56,7 +56,7 @@ For each action, you must supply the custom domain in the path. A `POST` request
 https://xxxx.execute-api.us-east-1.amazonaws.com/v1/domains/my.customdomain.com
 ```
 
-### Create a custom domain
+### Create a domain
 
 To create a new custom domain, you must supply the `origin_domain_name` as an attribute in a JSON request body:
 
@@ -77,5 +77,68 @@ HTTP/1.1 201 Created
 Content-Type: application/json
 ...
 
-{"domain_name":"my.customdomain.com","origin_domain_name":"usersubdomain.myapp.com","setup_started_at":1513277524474,"setup_verified_at":null,"setup_verification_failed_at":null,"delete_started_at":null,"nameservers":null,"route53_hosted_zone_created_at":null,"route53_hosted_zone_id":null,"nameserver_delegation_verified_at":null,"ses_domain_identity_created_at":null,"ses_domain_identity_verified_at":null,"ses_domain_dkim_verified_at":null,"acm_certificate_arn":null,"acm_certificate_verified_at":null,"cloudfront_distribution_id":null,"cloudfront_distribution_domain_name":null,"cloudfront_distribution_verified_at":null}
+{
+  "domain_name": "my.customdomain.com",
+  "origin_domain_name": "user.mycoolapp.com",
+  "setup_started_at": 1513811181230,
+  "setup_verified_at": null,
+  "setup_verification_failed_at": null,
+  "delete_started_at": null,
+  "nameservers": null,
+  "route53_hosted_zone_created_at": null,
+  "route53_hosted_zone_id": null,
+  "nameserver_delegation_verified_at": null,
+  "ses_domain_identity_created_at": null,
+  "ses_domain_identity_verified_at": null,
+  "ses_domain_dkim_verified_at": null,
+  "acm_certificate_arn": null,
+  "acm_certificate_verified_at": null,
+  "cloudfront_distribution_id": null,
+  "cloudfront_distribution_domain_name": null,
+  "cloudfront_distribution_authenticity_header_name": null,
+  "cloudfront_distribution_authenticity_header_value": null,
+  "cloudfront_distribution_verified_at": null
+}
+```
+
+### Get the status of a domain
+
+After creating a domain, you can get its status at any time:
+
+#### Request
+
+```
+curl "https://xxxx.execute-api.us-east-1.amazonaws.com/v1/domains/my.customdomain.com"
+```
+
+#### Response
+
+```
+{
+  "domain_name": "my.customdomain.com",
+  "origin_domain_name": "user.mycoolapp.com",
+  "setup_started_at": "1513895151502",
+  "setup_verified_at": "1513901002322",
+  "setup_verification_failed_at": null,
+  "delete_started_at": null,
+  "nameservers": [
+    "ns-1020.awsdns-63.net",
+    "ns-1133.awsdns-13.org",
+    "ns-137.awsdns-17.com",
+    "ns-1703.awsdns-20.co.uk"
+  ],
+  "route53_hosted_zone_created_at": "1513895155140",
+  "route53_hosted_zone_id": "/hostedzone/Z3BHGxxxxxxxxx",
+  "nameserver_delegation_verified_at": "1513895947741",
+  "ses_domain_identity_created_at": "1513895952183",
+  "ses_domain_identity_verified_at": "1513896047485",
+  "ses_domain_dkim_verified_at": "1513896047486",
+  "acm_certificate_arn": "arn:aws:acm:us-east-1:xxxx:certificate/c09846bd-b606-459e-xxxx-xxxxxxxxxxxx",
+  "acm_certificate_verified_at": "1513896149665",
+  "cloudfront_distribution_id": "E3MB8KKYEHYB09",
+  "cloudfront_distribution_domain_name": "dirpofaes3eqa.cloudfront.net",
+  "cloudfront_distribution_authenticity_header_name": "X-Domain-Authenticity-Token",
+  "cloudfront_distribution_authenticity_header_value": "dc3da4fe-6abc-4cec-b9c1-32f5e841c130",
+  "cloudfront_distribution_verified_at": "1513901000292"
+}
 ```
