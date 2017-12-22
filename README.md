@@ -141,3 +141,19 @@ curl "https://xxxx.execute-api.us-east-1.amazonaws.com/v1/domains/my.customdomai
   "cloudfront_distribution_verified_at": "1513901000292"
 }
 ```
+
+### Delete a domain
+
+After a domain has been created, you can delete it. Deletion takes awhile (there are a bunch of things to tear down in the AWS account), so you can still make subsequent `GET` requests to the domain to check the status of deletion. **You cannot delete a domain immediately after creating it, you must wait for it to fully finish creating first.**
+
+#### Request
+
+```
+curl -X "DELETE" "https://xxxx.execute-api.us-east-1.amazonaws.com/v1/domains/my.customdomain.com"
+```
+
+#### Response
+
+```
+HTTP/1.1 204 No Content
+```
