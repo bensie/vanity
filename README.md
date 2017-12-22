@@ -157,3 +157,11 @@ curl -X "DELETE" "https://xxxx.execute-api.us-east-1.amazonaws.com/v1/domains/my
 ```
 HTTP/1.1 204 No Content
 ```
+
+## Pub / Sub Status Notifications
+
+As the setup or delete process is happening, you likely want to show the status to your users. You can poll the `GET` endpoint, but you may want to be notified when things change instead.
+
+All changes are published to an [SNS](https://aws.amazon.com/sns/) topic and the topic info is provided in the "Outputs" section of the Stack Detail in CloudFormation. You can configure any compatible subscription (Email, HTTP POST, etc) to receive updates wherever makes sense for your application.
+
+The message posted to the topic is the same JSON shape as the API responses above.
