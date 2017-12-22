@@ -72,11 +72,7 @@ curl -X "POST" "https://xxxx.execute-api.us-east-1.amazonaws.com/v1/domains/my.c
 
 #### Response
 
-```
-HTTP/1.1 201 Created
-Content-Type: application/json
-...
-
+```json
 {
   "domain_name": "my.customdomain.com",
   "origin_domain_name": "user.mycoolapp.com",
@@ -113,7 +109,7 @@ curl "https://xxxx.execute-api.us-east-1.amazonaws.com/v1/domains/my.customdomai
 
 #### Response
 
-```
+```json
 {
   "domain_name": "my.customdomain.com",
   "origin_domain_name": "user.mycoolapp.com",
@@ -133,12 +129,15 @@ curl "https://xxxx.execute-api.us-east-1.amazonaws.com/v1/domains/my.customdomai
   "ses_domain_identity_created_at": "1513895952183",
   "ses_domain_identity_verified_at": "1513896047485",
   "ses_domain_dkim_verified_at": "1513896047486",
-  "acm_certificate_arn": "arn:aws:acm:us-east-1:xxxx:certificate/c09846bd-b606-459e-xxxx-xxxxxxxxxxxx",
+  "acm_certificate_arn":
+    "arn:aws:acm:us-east-1:xxxx:certificate/c09846bd-b606-459e-xxxx-xxxxxxxxxxxx",
   "acm_certificate_verified_at": "1513896149665",
   "cloudfront_distribution_id": "E3MB8KKYEHYB09",
   "cloudfront_distribution_domain_name": "dirpofaes3eqa.cloudfront.net",
-  "cloudfront_distribution_authenticity_header_name": "X-Domain-Authenticity-Token",
-  "cloudfront_distribution_authenticity_header_value": "dc3da4fe-6abc-4cec-b9c1-32f5e841c130",
+  "cloudfront_distribution_authenticity_header_name":
+    "X-Domain-Authenticity-Token",
+  "cloudfront_distribution_authenticity_header_value":
+    "dc3da4fe-6abc-4cec-b9c1-32f5e841c130",
   "cloudfront_distribution_verified_at": "1513901000292"
 }
 ```
