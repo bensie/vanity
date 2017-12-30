@@ -52,7 +52,7 @@ const getUpdateItemParams = ({ item }) => {
         }
       },
       UpdateExpression:
-        'REMOVE CloudFrontDistributionVerifiedAt, CloudFrontDistributionID, CloudFrontDistributionDomainName'
+        'REMOVE CloudFrontDistributionVerifiedAt, CloudFrontDistributionID, CloudFrontDistributionDomainName, CloudFrontDistributionAuthenticityHeaderName, CloudFrontDistributionAuthenticityHeaderValue'
     }
     resolve({ item, updateItemParams })
   })
