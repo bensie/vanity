@@ -34,10 +34,16 @@ const getItem = domainName => {
 
 const createDistribution = ({ item }) => {
   return new Promise((resolve, reject) => {
-    const authenticityHeader = {
-      HeaderName: 'X-Domain-Authenticity-Token',
-      HeaderValue: uuidv4()
-    }
+    const customHeaders = [
+      {
+        HeaderName: 'X-Domain-Authenticity-Token',
+        HeaderValue: uuidv4()
+      },
+      {
+        HeaderName: 'X-Forwarded-Host',
+        HeaderValue: item.DomainName.S
+      }
+    ]
     const params = {
       DistributionConfig: {
         CallerReference: idempotencyToken(
@@ -55,8 +61,8 @@ const createDistribution = ({ item }) => {
               Id: `custom-origin-${item.DomainName.S}`,
               DomainName: item.OriginDomainName.S,
               CustomHeaders: {
-                Quantity: 1,
-                Items: [authenticityHeader]
+                Quantity: customHeaders.length,
+                Items: customHeaders
               },
               CustomOriginConfig: {
                 HTTPPort: 80,
