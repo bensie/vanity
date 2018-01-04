@@ -117,7 +117,11 @@ const createDistribution = ({ item }) => {
       if (err) {
         reject(err)
       } else {
-        resolve({ item, distribution: data, authenticityHeader })
+        resolve({
+          item,
+          distribution: data,
+          authenticityHeader: customHeaders[0]
+        })
       }
     })
   })
