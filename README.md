@@ -165,3 +165,21 @@ As the setup or delete process is happening, you likely want to show the status 
 All changes are published to an [SNS](https://aws.amazon.com/sns/) topic and the topic info is provided in the "Outputs" section of the Stack Detail in CloudFormation. You can configure any compatible subscription (Email, HTTP POST, etc) to receive updates wherever makes sense for your application.
 
 The message posted to the topic is the same JSON shape as the API responses above.
+
+## Handling requests on your backend
+
+A CloudFront distribution sits between you and your client for all incoming requests to vanity domains. CloudFront terminates TLS using the Vanity domain's certificate and CloudFront expects that your backend will respond over HTTPS with a valid TLS certificate at the supplied `origin_domain_name`. HTTP is not supported.
+
+There are 3 relevant headers that you can use to identify/validate traffic to your app: `Host`, `X-Forwarded-Host`, and `X-Domain-Authenticity-Token`.
+
+### `Host` header
+
+The `Host` header will always be set to the value specified in `origin_domain_name` (the Vanity origin). Your `origin_domain_name` must resolve publicly or traffic will never hit your backend.
+
+### `X-Forwarded-Host` header
+
+The `X-Forwarded-Host` header will always be set to the value specified in `domain_name` (the Vanity domain). This allows you to determine the host that the client used and is often helpful in determining which client's content to show. This header can be spoofed, so it's recommended that you validate each request with the `X-Domain-Authenticity-Token` header, shown below.
+
+### `X-Domain-Authenticity-Token` header
+
+This value is unique to each domain and is supplied in the `cloudfront_distribution_authenticity_header_value` attribute in the vanity API response. Use this to validate that the request came from CloudFront. Anyone can spoof this header, but if the token doesn't match, it didn't come from CloudFront.
