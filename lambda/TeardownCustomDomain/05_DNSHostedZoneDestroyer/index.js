@@ -21,7 +21,7 @@ const getItem = domainName => {
       } else if (Object.keys(data).length === 0) {
         reject(new Error('domain_name not found'))
       } else {
-        if (data.item.Route53HostedZoneID) {
+        if (data.Item.Route53HostedZoneID) {
           resolve({ item: data.Item })
         } else {
           reject(new SkipToEndWithSuccessError('no route53 zone configured'))
