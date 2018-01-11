@@ -71,7 +71,9 @@ const getUpdateItemParams = ({ item, hostedZone }) => {
   return new Promise(resolve => {
     const en = process.env.EXPECTED_NAMESERVERS
     const nameservers =
-      !en || 0 === en.length ? hostedZone.DelegationSet.NameServers : en
+      !en || 0 === en.length
+        ? hostedZone.DelegationSet.NameServers
+        : en.split(',')
     const updateItemParams = {
       TableName: process.env.DYNAMODB_TABLE,
       Key: {
