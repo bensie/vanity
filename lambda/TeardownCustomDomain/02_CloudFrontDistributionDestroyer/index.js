@@ -3,6 +3,8 @@ AWS.config.update({ region: process.env.AWS_REGION })
 const dynamodb = new AWS.DynamoDB()
 const cloudfront = new AWS.CloudFront()
 
+class SkipToEndWithSuccessError extends Error {}
+
 const getItem = domainName => {
   return new Promise((resolve, reject) => {
     const params = {
@@ -19,7 +21,11 @@ const getItem = domainName => {
       } else if (Object.keys(data).length === 0) {
         reject(new Error('domain_name not found'))
       } else {
-        resolve({ item: data.Item })
+        if (data.Item.CloudFrontDistributionID) {
+          resolve({ item: data.Item })
+        } else {
+          reject(new SkipToEndWithSuccessError('no distribution configured'))
+        }
       }
     })
   })
@@ -34,7 +40,11 @@ const deleteDistribution = ({ item, eTag }) => {
 
     cloudfront.deleteDistribution(params, (err, _data) => {
       if (err) {
-        reject(err)
+        if (err.code === 'NoSuchDistribution') {
+          resolve({ item })
+        } else {
+          reject(err)
+        }
       } else {
         resolve({ item })
       }
@@ -83,5 +93,11 @@ exports.handler = (event, _context, callback) => {
     .then(getUpdateItemParams)
     .then(updateItem)
     .then(() => success())
-    .catch(error => failure(error))
+    .catch(error => {
+      if (error instanceof SkipToEndWithSuccessError) {
+        success()
+      } else {
+        failure(error)
+      }
+    })
 }

@@ -3,6 +3,8 @@ AWS.config.update({ region: process.env.AWS_REGION })
 const dynamodb = new AWS.DynamoDB()
 const cloudfront = new AWS.CloudFront()
 
+class SkipToEndWithSuccessError extends Error {}
+
 const getItem = domainName => {
   return new Promise((resolve, reject) => {
     const params = {
@@ -19,7 +21,11 @@ const getItem = domainName => {
       } else if (Object.keys(data).length === 0) {
         reject(new Error('domain_name not found'))
       } else {
-        resolve({ item: data.Item })
+        if (data.Item.CloudFrontDistributionID) {
+          resolve({ item: data.Item })
+        } else {
+          reject(new SkipToEndWithSuccessError('no distribution configured'))
+        }
       }
     })
   })
@@ -33,7 +39,11 @@ const getDistributionConfig = ({ item }) => {
 
     cloudfront.getDistributionConfig(params, (err, data) => {
       if (err) {
-        reject(err)
+        if (err.code === 'NoSuchDistribution') {
+          reject(new SkipToEndWithSuccessError(err.message))
+        } else {
+          reject(err)
+        }
       } else {
         resolve({
           item,
@@ -75,5 +85,11 @@ exports.handler = (event, _context, callback) => {
     .then(getDistributionConfig)
     .then(disableDistribution)
     .then(({ eTag }) => callback(null, { domainName, eTag }))
-    .catch(error => failure(error))
+    .catch(error => {
+      if (error instanceof SkipToEndWithSuccessError) {
+        success()
+      } else {
+        failure(error)
+      }
+    })
 }

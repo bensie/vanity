@@ -3,6 +3,8 @@ AWS.config.update({ region: process.env.AWS_REGION })
 const dynamodb = new AWS.DynamoDB()
 const route53 = new AWS.Route53()
 
+class SkipToEndWithSuccessError extends Error {}
+
 const getItem = domainName => {
   return new Promise((resolve, reject) => {
     const params = {
@@ -19,7 +21,11 @@ const getItem = domainName => {
       } else if (Object.keys(data).length === 0) {
         reject(new Error('domain_name not found'))
       } else {
-        resolve({ item: data.Item })
+        if (data.item.Route53HostedZoneID) {
+          resolve({ item: data.Item })
+        } else {
+          reject(new SkipToEndWithSuccessError('no route53 zone configured'))
+        }
       }
     })
   })
@@ -32,7 +38,11 @@ const listResourceRecordSets = ({ item }) => {
     }
     route53.listResourceRecordSets(params, (err, data) => {
       if (err) {
-        reject(err)
+        if (err.code === 'NoSuchHostedZone') {
+          resolve({ item, resourceRecordSets: { ResourceRecordSets: [] } })
+        } else {
+          reject(err)
+        }
       } else {
         resolve({ item, resourceRecordSets: data })
       }
@@ -70,7 +80,11 @@ const deleteResourceRecordSets = ({ item, resourceRecordSets }) => {
 
     route53.changeResourceRecordSets(params, (err, data) => {
       if (err) {
-        reject(err)
+        if (err.code === 'NoSuchHostedZone') {
+          resolve({ item })
+        } else {
+          reject(err)
+        }
       } else {
         resolve({ item })
       }
@@ -86,7 +100,11 @@ const deleteHostedZone = ({ item }) => {
 
     route53.deleteHostedZone(params, (err, _data) => {
       if (err) {
-        reject(err)
+        if (err.code === 'NoSuchHostedZone') {
+          resolve({ item })
+        } else {
+          reject(err)
+        }
       } else {
         resolve({ item })
       }
@@ -137,5 +155,11 @@ exports.handler = (event, _context, callback) => {
     .then(getUpdateItemParams)
     .then(updateItem)
     .then(() => success())
-    .catch(error => failure(error))
+    .catch(error => {
+      if (error instanceof SkipToEndWithSuccessError) {
+        success()
+      } else {
+        failure(error)
+      }
+    })
 }
