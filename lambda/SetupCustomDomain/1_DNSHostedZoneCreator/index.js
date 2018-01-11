@@ -33,13 +33,15 @@ const getItem = domainName => {
 
 const getCreateZoneParams = ({ item }) => {
   return new Promise(resolve => {
+    const rds = process.env.REUSABLE_DELEGATION_SET_ID
+    const delegationSetId = !rds || 0 === rds.length ? null : rds
     const createZoneParams = {
       Name: item.DomainName.S,
       CallerReference: idempotencyToken(
         item.SetupStartedAt.N,
         item.DomainName.S
       ),
-      DelegationSetId: process.env.DELEGATION_SET_ID
+      DelegationSetId: delegationSetId
     }
     resolve({ item, createZoneParams })
   })
@@ -67,6 +69,9 @@ const createZone = ({ item, createZoneParams }) => {
 
 const getUpdateItemParams = ({ item, hostedZone }) => {
   return new Promise(resolve => {
+    const en = process.env.EXPECTED_NAMESERVERS
+    const nameservers =
+      !en || 0 === en.length ? hostedZone.DelegationSet.NameServers : en
     const updateItemParams = {
       TableName: process.env.DYNAMODB_TABLE,
       Key: {
@@ -81,7 +86,7 @@ const getUpdateItemParams = ({ item, hostedZone }) => {
           N: `${Date.now()}`
         },
         ':Nameservers': {
-          SS: hostedZone.DelegationSet.NameServers
+          SS: nameservers
         },
         ':Route53HostedZoneID': {
           S: hostedZone.HostedZone.Id
