@@ -71,6 +71,11 @@ const deleteResourceRecordSets = ({ item, resourceRecordSets }) => {
       })
     })
 
+    if (changes.length === 0) {
+      resolve({ item })
+      return
+    }
+
     const params = {
       ChangeBatch: {
         Changes: changes
