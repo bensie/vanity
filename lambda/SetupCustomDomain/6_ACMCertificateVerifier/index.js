@@ -2,6 +2,7 @@ const AWS = require('aws-sdk')
 AWS.config.update({ region: process.env.AWS_REGION })
 const dynamodb = new AWS.DynamoDB()
 const acm = new AWS.ACM()
+const route53 = new AWS.Route53()
 
 class SkipToEndWithSuccessError extends Error {}
 
