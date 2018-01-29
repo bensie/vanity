@@ -27,6 +27,62 @@ const getItem = domainName => {
   })
 }
 
+const describeCertificate = ({ item }) => {
+  return new Promise((resolve, reject) => {
+    const params = {
+      CertificateArn: item.ACMCertificateArn.S
+    }
+    acm.describeCertificate(params, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve({ item, certificate: data })
+      }
+    })
+  })
+}
+
+const getRecordSetChanges = ({ item, certificate }) => {
+  return new Promise(resolve => {
+    const requiredRecord =
+      certificate.Certificate.DomainValidationOptions[0].ResourceRecord
+
+    const recordSetChanges = {
+      ChangeBatch: {
+        Changes: [
+          {
+            Action: 'UPSERT',
+            ResourceRecordSet: {
+              Name: `${requiredRecord.Name}.`,
+              ResourceRecords: [
+                {
+                  Value: `${requiredRecord.Value}.`
+                }
+              ],
+              TTL: 3600,
+              Type: `${requiredRecord.Type}`
+            }
+          }
+        ]
+      },
+      HostedZoneId: item.Route53HostedZoneID.S
+    }
+    resolve({ item, certificate, recordSetChanges })
+  })
+}
+
+const changeResourceRecordSets = ({ item, certificate, recordSetChanges }) => {
+  return new Promise((resolve, reject) => {
+    route53.changeResourceRecordSets(recordSetChanges, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve({ item })
+      }
+    })
+  })
+}
+
 const verifyCertificate = ({ item }) => {
   return new Promise((resolve, reject) => {
     const params = {
@@ -41,7 +97,7 @@ const verifyCertificate = ({ item }) => {
         if (status === 'SUCCESS') {
           resolve({ item, certificate: data })
         } else {
-          reject(new Error(`ACM certifcate validation status is ${status}`))
+          reject(new Error(`ACM certificate validation status is ${status}`))
         }
       }
     })
@@ -90,6 +146,9 @@ exports.handler = (event, _context, callback) => {
   }
 
   getItem(domainName)
+    .then(describeCertificate)
+    .then(getRecordSetChanges)
+    .then(changeResourceRecordSets)
     .then(verifyCertificate)
     .then(getUpdateItemParams)
     .then(updateItem)

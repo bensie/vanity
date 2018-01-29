@@ -60,63 +60,7 @@ const createCertificate = ({ item }) => {
   })
 }
 
-const describeCertificate = ({ item, arn }) => {
-  return new Promise((resolve, reject) => {
-    const params = {
-      CertificateArn: arn
-    }
-    acm.describeCertificate(params, (err, data) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve({ item, certificate: data })
-      }
-    })
-  })
-}
-
-const getRecordSetChanges = ({ item, certificate }) => {
-  return new Promise(resolve => {
-    const requiredRecord =
-      certificate.Certificate.DomainValidationOptions[0].ResourceRecord
-
-    const recordSetChanges = {
-      ChangeBatch: {
-        Changes: [
-          {
-            Action: 'UPSERT',
-            ResourceRecordSet: {
-              Name: `${requiredRecord.Name}.`,
-              ResourceRecords: [
-                {
-                  Value: `${requiredRecord.Value}.`
-                }
-              ],
-              TTL: 3600,
-              Type: `${requiredRecord.Type}`
-            }
-          }
-        ]
-      },
-      HostedZoneId: item.Route53HostedZoneID.S
-    }
-    resolve({ item, certificate, recordSetChanges })
-  })
-}
-
-const changeResourceRecordSets = ({ item, certificate, recordSetChanges }) => {
-  return new Promise((resolve, reject) => {
-    route53.changeResourceRecordSets(recordSetChanges, (err, data) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve({ item, certificate })
-      }
-    })
-  })
-}
-
-const getUpdateItemParams = ({ item, certificate }) => {
+const getUpdateItemParams = ({ item, arn }) => {
   return new Promise(resolve => {
     const updateItemParams = {
       TableName: process.env.DYNAMODB_TABLE,
@@ -128,7 +72,7 @@ const getUpdateItemParams = ({ item, certificate }) => {
       UpdateExpression: 'SET ACMCertificateArn=:ACMCertificateArn',
       ExpressionAttributeValues: {
         ':ACMCertificateArn': {
-          S: `${certificate.Certificate.CertificateArn}`
+          S: arn
         }
       }
     }
@@ -158,9 +102,6 @@ exports.handler = (event, _context, callback) => {
 
   getItem(domainName)
     .then(createCertificate)
-    .then(describeCertificate)
-    .then(getRecordSetChanges)
-    .then(changeResourceRecordSets)
     .then(getUpdateItemParams)
     .then(updateItem)
     .then(() => success())
