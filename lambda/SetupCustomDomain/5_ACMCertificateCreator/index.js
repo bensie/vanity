@@ -76,7 +76,7 @@ const getUpdateItemParams = ({ item, arn }) => {
         }
       }
     }
-    resolve({ item, certificate, updateItemParams })
+    resolve({ item, updateItemParams })
   })
 }
 
