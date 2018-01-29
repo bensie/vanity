@@ -54,14 +54,14 @@ const getRecordSetChanges = ({ item, certificate }) => {
           {
             Action: 'UPSERT',
             ResourceRecordSet: {
-              Name: `${requiredRecord.Name}`,
+              Name: requiredRecord.Name,
               ResourceRecords: [
                 {
-                  Value: `${requiredRecord.Value}`
+                  Value: requiredRecord.Value
                 }
               ],
               TTL: 3600,
-              Type: `${requiredRecord.Type}`
+              Type: requiredRecord.Type
             }
           }
         ]
