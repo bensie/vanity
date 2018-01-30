@@ -71,7 +71,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           STATE_MACHINE_ARN: !Ref SetupStateMachine
   HandleCustomDomainsShowFunction:
@@ -90,7 +89,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
   HandleCustomDomainsDestroyFunction:
     Type: AWS::Lambda::Function
@@ -108,7 +106,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           STATE_MACHINE_ARN: !Ref TeardownStateMachine
   SetupDNSZoneCreatorFunction:
@@ -126,7 +123,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
@@ -145,7 +141,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
@@ -164,7 +159,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
@@ -183,7 +177,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
@@ -202,7 +195,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
@@ -221,7 +213,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
@@ -240,7 +231,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
@@ -259,7 +249,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
@@ -278,7 +267,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
@@ -297,7 +285,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
@@ -316,7 +303,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
           EXPECTED_NAMESERVERS: !Ref ExpectedNameserversParameter
           REUSABLE_DELEGATION_SET_ID: !Ref ReusableDelegationSetIdParameter
@@ -335,7 +321,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
   TeardownCloudFrontDistributionDestroyerFunction:
     Type: AWS::Lambda::Function
@@ -352,7 +337,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
   TeardownSESDomainDestroyerFunction:
     Type: AWS::Lambda::Function
@@ -369,7 +353,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
   TeardownACMCertificateDestroyerFunction:
     Type: AWS::Lambda::Function
@@ -386,7 +369,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
   TeardownDNSHostedZoneDestroyerFunction:
     Type: AWS::Lambda::Function
@@ -403,7 +385,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
   TeardownSuccessHandlerFunction:
     Type: AWS::Lambda::Function
@@ -420,7 +401,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_TABLE: !Ref VanityDomainsTable
   StreamToSNSTriggerFunction:
     Type: AWS::Lambda::Function
@@ -437,7 +417,6 @@ Resources:
           - { Version: !FindInMap [ StaticVariables, Versions, Current ] }
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           DYNAMODB_STREAM_SNS_TOPIC: !Ref TableStreamTopic
   DynamoDBStreamToSNSFunctionSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
